@@ -1,0 +1,596 @@
+---
+title: "16_BingJing"
+output: html_document
+date: "2026-02-16"
+---
+
+#bingjing code on github to create the phenotypes 
+
+```{bash}
+
+cd /network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BingJing
+
+#mkdir -p outputs
+module load python
+
+PYTHONPATH=. python -m scripts.extract_imaging_eids \
+  --ukb-tab /network/iss/ukbiobank/unorganized/unorganized_pheno/ukb673035.tab \
+  --out outputs/t1_eids.txt
+
+PYTHONPATH=. python -m scripts.extract_fields_for_eids \
+  --ukb-tab /network/iss/ukbiobank/unorganized/unorganized_pheno/ukb673035.tab \
+  --eids outputs/t1_eids.txt \
+  --fields fields.csv \
+  --out outputs/raw_selected_fields.tsv
+  
+  PYTHONPATH=. python -m scripts.build_final_table \
+  --in outputs/raw_selected_fields.tsv \
+  --out outputs/final_traits.tsv
+  
+```
+
+
+```{bash}
+wd="/network/iss/ukbiobank/unorganized/unorganized_pheno"
+od="/network/iss/ukbiobank/clinic/pheno/organized_pheno"
+bind="/network/iss/ukbiobank/software" 
+cd $od
+
+${bind}/qsubshcom "cut -f1,20721,1333,1334,1335,1336,19805,19806,19807,19808,19809,19810,19811,19812,19813,19814,19815,19816,19817,19818,19819,19820,19821,19822,19823,19824,19825,19826,19827,19828,19829,19830,19831,19832,19833,19834,19835,19836,19837,19838,19839,19840,19841,19842,19843,19844,19845,19846,19847,19848,19849,19850,19851,19852,19853,19854,19855,19856,19857,19858,19859,19860,19861,19862,19863,19864,19865,19866,19867,19868,19869,19870,19871,19872,19873,19874,19875,19876,19877,19878,19879,19880,19881,19882,19883,19884,19885,19886,19887,19888,19889,19890,19891,19892,19893,19894,19895,19896,19897,19898,19899,19900,19901,19902,19903,19904,19905,19906,19907,19908,19909,19910,19911,19912,19913,19914,19915,19916,19917,19918,19919,19920,19921,19922,19923,19924,19925,19926,19927,19928,19929,19930,19931,19932,19933,19934,19935,19936,19937,19938,19939,19940,19941,19942,19943,19944,19945,19946,19947,19948,19949,19950,19951,19952,19953,19954,19955,19956,19957,19958,19959,19960,19961,19962,19963,19964,19965,19966,19967,19968,19969,19970,19971,19972,19973,19974,19975,19976,19977,19978,19979,19980,19981,19982,19983,19984,19985,19986,19987,19988,19989,19990,19991,19992,19993,19994,19995,19996,19997,19998,19999,20000,20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027,20028,20029,20030,20031,20032,20033,20034,20035,20036,20037,20038,20039,20040,20041,20042,20043,20044,20045,20046,20047,20048,20049,20050,20051,20052,20053,20054,20055,20056,20057,20058,20059,20060,20061,20062,20063,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090,8091,8092,8093,8094,8095,8096,8097,8098,8099,8100,8101,8102,8103,8104,8105,8106,8107,8108,8109,8110,8111,8112,8113,8114,8115,8116,8117,8118,8119,8120,8121,8122,8123,8124,8125,8126,8127,8128,8129,8130,8131,8132,8133,8134,8135,8136,8137,8138,8139,8140,8141,8142,8143,8144,8145,8146,8147,8148,8149,8150,8151,8152,8153,8154,8155,8156,8157,8158,8159,8160,8161,8162,8163,8164,8165,8166,8167,8168,8169,8170,8171,8172,8173,8174,8175,8176,8177,8178,8179,8180,8181,8182,8183,8184,8185,8186,8187,8188,8189,8190,8191,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8203,8204,8205,8206,8207,8208,8209,8210,8211,8212,18580,18581,7355,7356,7357,7358,7359,7360,7361,7362,7363,7364,7365,7366,7155,7156,7157,7158,7159,7160,7161,7162,7163,7164,7165,7166,7167,7168,7169,7170,8213,8214,8215,8216,8217,8218,8219,8220,8221,8222,8223,8224,8225,8226,8227,8228,8229,8230,8231,8232,8233,8234,8235,8236,8237,8238,8239,8240,8241,8242,8243,8244,8245,8246,8247,8248,8249,8250,8251,8252,8253,8254,8255,8256,8257,8258,8259,8260,8261,8262,8263,8264,8265,8266,8267,8268,8269,8270,8271,8272,8273,8274,8275,8276,8277,8278,8279,8280,8281,8282,8283,8284,8285,8286,8287,8288,8289,8290,8291,8292,8293,8294,8295,8296,8297,8298,8299,8300,8301,8302,8303,8304,8305,8306,8307,8308,8309,8310,8311,8312,8313,8314,8315,8316,8317,8318,8319,8320,8321,8322,8323,8324,8325,8326,8327,8328,8329,8330,8331,8332,8333,8334,8335,8336,8337,8338,8339,8340,8341,8342,8343,8344,8345,8346,8347,8348,8349,8350,8351,8352,8353,8354,8355,8356,8357,8358,8359,8360,8361,8362,8363,8364,8365,8366,8367,8368,8369,8370,8371,8372,8373,8374,8375,8376,8377,8378,8379,8380,8381,8382,8383,8384,8385,8386,8387,8388,8389,8390,8391,8392,8393,8394,8395,8396,8397,8398,8399,8400,8401,8402,8403,8404 ${wd}/ukb673035.tab > ${od}/ukb673035_UKbiobank_ED_BingJing.tab|;" 1 10G UKB_pheno_extract 24:00:00 " "
+
+```
+
+
+#code to run BWAS of BJ's traits
+```{r setup, include=FALSE}
+
+traits<-fread('final_traits.tsv')
+list_participants<-fread('../06_REML_LDSC/covar_discr_total')
+
+subTraits<-traits[traits$eid %in% c(list_participants$V1),]
+
+dim(subTraits)
+
+summary(subTraits)
+
+```
+
+write each trait in a separate file 
+```{R}
+
+traits<-fread('final_traits.tsv')
+
+for (pheno in colnames(traits)){
+  tr<-traits[[pheno]]
+  
+  if (all(is.na(tr))) {
+    next
+  }
+  
+  if (pheno=="stroke_i64_preimg"){
+    next
+  }
+  
+  if (pheno=="htn_i10_preimg"){
+    next
+  }
+  
+  print(pheno)
+  
+  df<-data.frame(V1=traits$eid,V2=traits$eid,V3=tr)
+
+  write.table(df,paste0('df_',pheno),row.names=F,col.names=F,quote=F)
+  
+}
+```
+
+
+```{R}
+write.table(data.frame(V1=colnames(traits)),'pheno_allList',row.names=F,col.names=F,quote=F)
+```
+
+#Run BWAS on phenotype
+```{bash,eval=F}
+
+
+pheno="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BRM_Vol"
+bods="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/REML_LDSC"
+bind="/network/iss/ukbiobank/software"
+wd="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BingJing/ukb-AD-traits-main"
+
+cd $wd 
+
+for proc in FS_All_moda 
+do
+${bind}/qsubshcom "pheno=\$(sed -n \"\${TASK_ID}{p;q}\" pheno_allList)|;
+echo \${pheno}|;
+${bind}/osca --befile ${bods}/UKB_QC_${proc}_Total  --pheno Files/df_\${pheno} --covar ${bods}/Files/covar_discr_total --qcovar ${bods}/Files/covar2_quant_${proc}_total --linear --out Results/sstat_${proc}_total_\${pheno}|;
+" 34 200G SumStat_40k 24:00:00 "-array=1-75"
+done 
+
+
+
+
+```
+
+
+data cleaning / arrangement
+```{R}
+
+tab<-fread('ukb673035_UKbiobank_ED_BingJing.tab')
+list_participants<-fread('../06_REML_LDSC/covar_discr_total')
+
+subTab<-tab[tab$f.eid %in% c(list_participants$V1),]
+summary(as.factor(subTab$f.42020.0.0))
+subTabNoAD<-subTab[is.na(subTab$f.42020.0.0),]
+```
+
+#menopause 
+
+```{R}
+subTabNoAD$Menopause<-ifelse(is.na(subTabNoAD$f.2724.3.0),ifelse(is.na(subTabNoAD$f.2724.2.0),ifelse(is.na(subTabNoAD$f.2724.1.0),subTabNoAD$f.2724.0.0,subTabNoAD$f.2724.1.0),subTabNoAD$f.2724.2.0),subTabNoAD$f.2724.3.0)
+
+subTabNoAD$Menopause[subTabNoAD$Menopause %in% c(-3,2,3)] <- NA
+subTabNoAD$Menopause<-factor(subTabNoAD$Menopause,levels = c(0,1),labels = c(0,1))
+
+```
+
+#create hypertension metric 
+```{R}
+library(dplyr)
+
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_I10 = if_else(rowSums(across(starts_with("f.41270."), ~ . == "I10"), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_I10 = if_else(rowSums(across(starts_with("f.40001."), ~ . == "I10"), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_illness_I10 = if_else(rowSums(across(starts_with("f.20002."), ~ . %in% c(1065, 1072)), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>%mutate(hyperTension = if_else(rowSums(across(c(ICD10_I10, death_I10, non_cancer_illness_I10), ~ . == 1)) > 0,1,0))
+
+subTabNoAD <- subTabNoAD %>% mutate(medication_I10_1 = if_else(rowSums(across(starts_with("f.6177"), ~ . =='2'), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(medication_I10_2 = if_else(rowSums(across(starts_with("f.6153"), ~ . =='2'), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(hyperTension = if_else((medication_I10_1 == 1 | medication_I10_2 == 1) & hyperTension == 0,NA, hyperTension))
+
+summary(as.factor(subTabNoAD$hyperTension))
+
+```
+
+BD
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(BD = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F300', 'F301', 'F302', 'F308', 'F309', 'F310', 'F311', 'F312', 'F313', 'F314', 'F315', 'F316', 'F317', 'F318', 'F319')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+
+SCZ
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(SCZ = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F200', 'F201', 'F202', 'F203', 'F204', 'F205', 'F206', 'F208', 'F209', 'F21', 'F220', 'F228', 'F229', 'F230', 'F231', 'F232', 'F233', 'F238', 'F239','F24', 'F250', 'F251', 'F252', 'F258', 'F259', 'F28','F29')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+PTSD
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(PTSD = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F430','F431','F432','F433','F434','F435','F436','F437','F438','F439')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+Phobic anxiety 
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(phobAnx = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F400','F401','F402','F403','F404','F405','F406','F407','F408','F409')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+
+Anxiety disorders others
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(anxDis = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F410','F411','F412','F413','F414','F415','F416','F417','F418','F419')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+
+
+major depression 
+```{R}
+library(dplyr)
+
+subTabNoAD <- subTabNoAD %>% mutate(majorDepression = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F320', 'F321', 'F322', 'F323', 'F328', 'F329', 'F330', 'F331', 'F332', 'F333', 'F334', 'F338', 'F339', 'F340', 'F341', 'F348','F349', 'F380')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(exclMD = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('F448')), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_illness_MD = if_else(rowSums(across(starts_with("f.20002."), ~ . ==1289), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(trtmt_MD = if_else(rowSums(across(starts_with("f.20003."), ~ . %in% c("1141202024", "1141153490", "1141195974", "1140867078", "1140867494", "1141171566", "2038459704", "1140872064", "1140879658", "1140867342", "1140867420", "1140882320", "1140872216", "1140910358", "1141200458", "1141172838", "1140867306", "1140867180", "1140872200", "1140867210", "1140867398", "1140882098", "1140867184", "1140867168", "1140863416", "1140909802", "1140867498", "1140867490", "1140910976", "1140867118", "1140867456", "1140928916", "1140872268", "1140867134", "1140867208", "1140867218", "1140867572", "1140879674", "1140909804", "1140867504", "1140868170", "1140879746", "1141152848", "1141177762", "1140867444", "1140867092", "1141152860", "1140872198", "1140867244", "1140868172", "1140867304", "1140872072", "1140879750", "1140868120", "1140872214", "1141201792", "1141167976", "1140882100")), na.rm = TRUE) > 0,1, 0))
+
+
+subTabNoAD <- subTabNoAD %>%mutate(majorDepression = if_else((majorDepression == 0 & (exclMD == 1 | trtmt_MD==1 | non_cancer_illness_MD==1 | BD==1 | SCZ==1 | PTSD==1 | phobAnx==1 | anxDis==1 )),NA, majorDepression))
+
+
+```
+
+
+we modify previous psy traits for exclusion controls 
+
+```{R}
+
+subTabNoAD <- subTabNoAD %>%mutate(BD = if_else((BD == 0 & (majorDepression==1 | SCZ==1 | PTSD==1 | phobAnx==1 | anxDis==1 )),NA, BD))
+subTabNoAD <- subTabNoAD %>%mutate(SCZ = if_else((SCZ == 0 & (majorDepression==1 | BD==1 | PTSD==1 | phobAnx==1 | anxDis==1 )),NA, SCZ))
+subTabNoAD <- subTabNoAD %>%mutate(PTSD = if_else((PTSD == 0 & (majorDepression==1 | BD==1 | SCZ==1 | phobAnx==1 | anxDis==1 )),NA, PTSD))
+subTabNoAD <- subTabNoAD %>%mutate(phobAnx = if_else((phobAnx == 0 & (majorDepression==1 | BD==1 | SCZ==1 | PTSD==1 | anxDis==1 )),NA, phobAnx))
+subTabNoAD <- subTabNoAD %>%mutate(anxDis = if_else((anxDis == 0 & (majorDepression==1 | BD==1 | SCZ==1 | PTSD==1 | phobAnx==1 )),NA, anxDis))
+
+```
+
+HyperCholesterolemia 
+
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_Cholesterolemia = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('E780')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_Cholesterolemia = if_else(rowSums(across(starts_with("f.20002."), ~ . %in% c('1473')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_Cholesterolemia = if_else(rowSums(across(starts_with("f.40001."), ~ . == "E780"), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(hyperCholesterolemia = if_else(rowSums(across(c(ICD10_Cholesterolemia, non_cancer_Cholesterolemia, death_Cholesterolemia), ~ . == 1)) > 0,1,0))
+
+
+subTabNoAD <- subTabNoAD %>% mutate(medication_HChol_1 = if_else(rowSums(across(starts_with("f.6177"), ~ . =='1'), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(medication_HChol_2 = if_else(rowSums(across(starts_with("f.6153"), ~ . =='1'), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(hyperCholesterolemia = if_else((medication_HChol_1 == 1 | medication_HChol_2 == 1) & hyperCholesterolemia == 0,NA, hyperCholesterolemia))
+
+#9155 Yes
+```
+
+
+T2D
+```{R}
+
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_T2D = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('E110', 'E111', 'E112', 'E113', 'E114', 'E115', 'E116', 'E117', 'E118', 'E119')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_T2D= if_else(rowSums(across(starts_with("f.20002."), ~ . %in% c('1223')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_T2D = if_else(rowSums(across(starts_with("f.40001."), ~ . %in% c('E110', 'E111', 'E112', 'E113', 'E114', 'E115', 'E116', 'E117', 'E118', 'E119')), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(T2D = if_else(rowSums(across(c(ICD10_T2D, non_cancer_T2D, death_T2D), ~ . == 1)) > 0,1,0))
+
+subTabNoAD <- subTabNoAD %>% mutate(medication_T2D_1 = if_else(rowSums(across(starts_with("f.6177"), ~ . =='3'), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(medication_T2D_2 = if_else(rowSums(across(starts_with("f.6153"), ~ . =='3'), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_rmT2D = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_rmT2D = if_else(rowSums(across(starts_with("f.40001."), ~ . %in% c('E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109')), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(T2D = if_else((medication_T2D_1 == 1 | medication_T2D_2 == 1 | death_rmT2D==1 | ICD10_rmT2D==1) & T2D == 0,NA, T2D))
+
+```
+
+
+Heart Failure 
+```{R}
+
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_HF = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('I110', 'I130', 'I132', 'I255', 'I420', 'I425', 'I428', 'I429', 'I500', 'I501', 'I509')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_HF= if_else(rowSums(across(starts_with("f.20002."), ~ . %in% c('1076','1079')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_HF = if_else(rowSums(across(starts_with("f.40001."), ~ . %in% c('I110', 'I130', 'I132', 'I255', 'I420', 'I425', 'I428', 'I429', 'I500', 'I501', 'I509')), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(HF = if_else(rowSums(across(c(ICD10_HF, non_cancer_HF, death_HF), ~ . == 1)) > 0,1, 0))
+
+
+subTabNoAD <- subTabNoAD %>% mutate(ICD10_rmHF = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('I421','I422')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(death_rmHF = if_else(rowSums(across(starts_with("f.40001."), ~ . %in% c('I421','I422')), na.rm = TRUE) > 0,1, 0))
+subTabNoAD <- subTabNoAD %>% mutate(non_cancer_rmHF= if_else(rowSums(across(starts_with("f.20002."), ~ . %in% c('1588')), na.rm = TRUE) > 0,1, 0))
+
+subTabNoAD <- subTabNoAD %>%mutate(HF = if_else((death_rmHF==1 | ICD10_rmHF==1| non_cancer_rmHF==1) & T2D == 0,NA, T2D))
+
+
+```
+
+Stroke 
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(stroke = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('I640','I641','I642','I643','I644','I645','I646','I647','I648','I649')), na.rm = TRUE) > 0,1, 0))
+
+```
+
+K05
+```{R}
+subTabNoAD <- subTabNoAD %>% mutate(K05 = if_else(rowSums(across(starts_with("f.41270."), ~ . %in% c('K050','K051','K052','K053','K054','K055','K056','K057','K058','K059')), na.rm = TRUE) > 0,1, 0))
+```
+
+
+df Final
+```{R}
+subTabNoAD$ID<-subTabNoAD$f.eid
+dfFinal<-subTabNoAD[,c('ID','T2D','hyperCholesterolemia','majorDepression','SCZ','BD','hyperTension','Menopause','PTSD','phobAnx','anxDis','stroke','K05'),]
+
+```
+
+
+write each trait in a separate file 
+```{R}
+
+for (pheno in colnames(dfFinal)){
+  tr<-dfFinal[[pheno]]
+  
+  
+  if (pheno=="ID"){
+    next
+  }
+  
+  
+  print(pheno)
+  
+  df<-data.frame(V1=dfFinal$ID,V2=dfFinal$ID,V3=tr)
+
+  write.table(df,paste0('df_',pheno),row.names=F,col.names=F,quote=F)
+  
+}
+```
+
+
+```{R}
+write.table(data.frame(V1=colnames(dfFinal)),'pheno_allList2',row.names=F,col.names=F,quote=F)
+```
+
+
+#Run BWAS on phenotype
+```{bash,eval=F}
+
+
+pheno="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BRM_Vol"
+bods="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/REML_LDSC"
+bind="/network/iss/ukbiobank/software"
+wd="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BingJing/ukb-AD-traits-main"
+cd $wd 
+
+for proc in FS_All_moda 
+do
+${bind}/qsubshcom "pheno=\$(sed -n \"\${TASK_ID}{p;q}\" pheno_allList2)|;
+echo \${pheno}|;
+${bind}/osca --befile ${bods}/UKB_QC_${proc}_Total  --pheno Files/df_\${pheno} --covar ${bods}/Files/covar_discr_total --qcovar ${bods}/Files/covar2_quant_${proc}_total --linear --out Results/sstat_${proc}_total_\${pheno}|;
+" 34 200G SumStat_40k 24:00:00 "-array=9-11"
+done 
+
+```
+
+
+get BLUP scores for traits 
+
+```{bash}
+
+brm='/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/REML_LDSC'
+pheno="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BRM_Vol"
+bods="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/REML_LDSC"
+bind="/network/iss/ukbiobank/software"
+wd="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BingJing/ukb-AD-traits-main"
+cd $wd 
+
+
+for proc in FS_All_moda
+do 
+${bind}/qsubshcom "pheno=\$(sed -n \"\${TASK_ID}{p;q}\" ${wd}/pheno_allList)|;
+${bind}/osca --reml --orm ${brm}/UKB_QC_${proc}_Total_BRM --pheno Files/df_\${pheno} --covar ${bods}/Files/covar_discr_total --qcovar ${bods}/Files/covar2_quant_${proc}_total --reml-pred-rand --out BLUP/myblp_\${pheno} " 4 100G Pred_Rand_${hemi} 48:00:00 "-array=1-78" 
+done 
+
+
+for proc in FS_All_moda
+do 
+${bind}/qsubshcom "pheno=\$(sed -n \"\${TASK_ID}{p;q}\" ${wd}/pheno_allList2)|;
+${bind}/osca --reml --orm ${brm}/UKB_QC_${proc}_Total_BRM --pheno Files/df_\${pheno} --covar ${bods}/Files/covar_discr_total --qcovar ${bods}/Files/covar2_quant_${proc}_total --reml-pred-rand --out BLUP/myblp_\${pheno} " 4 100G Pred_Rand_${hemi} 48:00:00 "-array=1-12" 
+done 
+
+```
+
+rename vtx
+
+```{R}
+
+corresp<-data.frame(fread('../PourBaptiste/CorrespondannceFS_Vox'))
+colnames(corresp)<-c('Probe','Voxel')
+# Path to your folder (change this to your actual path)
+# List all files ending with .linear
+linear_files <- list.files(
+  path = 'Results/',
+  pattern = "\\.linear$",
+  full.names = TRUE
+)
+
+# Loop over the files
+for (file in linear_files) {
+  print(file)
+  
+  cat("Opening:", file, "\n")
+  
+  # Example: read the file (adjust depending on format)
+  data <- read.table(file, header = TRUE)
+  colnames(data)<-c('Chr','Probe','bp','Gene','Orientation','b','se','p','NMISS')
+  data[data$Probe=="2e+05",'Probe']<-'200000'
+  data[data$Probe=="3e+05",'Probe']<-'300000'
+  data[data$Probe=="4e+05",'Probe']<-'400000'
+  data[data$Probe=="5e+05",'Probe']<-'500000'
+  data[data$Probe=="6e+05",'Probe']<-'600000'
+  newData<-merge(data,corresp,by=c('Probe'))
+  print(dim(newData))
+  newData<-newData[,c('Chr','Voxel','bp','Gene','Orientation','b','se','p','NMISS')]
+  write.table(newData,file,row.names=F,quote=F)
+}
+
+```
+
+
+
+re extract columns related to alcohol 
+
+```{bash}
+wd="/network/iss/ukbiobank/unorganized/unorganized_pheno"
+od="/network/iss/ukbiobank/clinic/pheno/organized_pheno"
+bind="/network/iss/ukbiobank/software" 
+cd $od
+
+${bind}/qsubshcom "cut -f1,3943,3944,3945,3946,3947,3948,3949,3950,3951,3952,3953,3954,3955,3956,3957,3958,3959,3960,3961,3962,3963,3964,3965,3966,994,995,996,997,998,999,1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017 ${wd}/ukb673035.tab > ${od}/ukb673035_UKbiobank_ED_BingJing_Alcohol.tab|;" 1 10G UKB_pheno_extract 24:00:00 " "
+
+```
+
+
+
+all alcohol intake phenotype 
+Combine weekly and monthly alcohol intake.
+
+Rule:
+ - If weekly and monthly/4 are both available, use their average.
+ - If only one is available, use that value.
+ - If neither is available, return NA.
+  Codes -1 and -3 are treated as missing.
+  
+```{R}
+tab<-fread('outputs/ukb673035_UKbiobank_ED_BingJing_Alcohol.tab')
+colnames(tab)<-c('ID','Alcohol_intake_frequency_V0','Alcohol_intake_frequency_V1','Alcohol_intake_frequency_V2','Alcohol_intake_frequency_V3','Avg_week_red_wine_V0','Avg_week_red_wine_V1','Avg_week_red_wine_V2','Avg_week_red_wine_V3','Avg_week_champagne_V0','Avg_week_champagne_V1','Avg_week_champagne_V2','Avg_week_champagne_V3',
+                 'Avg_week_beer_cider_V0','Avg_week_beer_cider_V1','Avg_week_beer_cider_V2','Avg_week_beer_cider_V3','Avg_week_spirits_V0','Avg_week_spirits_V1','Avg_week_spirits_V2','Avg_week_spirits_V3','Avg_week_fortified_V0','Avg_week_fortified_V1','Avg_week_fortified_V2','Avg_week_fortified_V3','Avg_month_red_wine_V0','Avg_month_red_wine_V1','Avg_month_red_wine_V2','Avg_month_red_wine_V3','Avg_month_champagne_V0','Avg_month_champagne_V1','Avg_month_champagne_V2','Avg_month_champagne_V3',
+                 'Avg_month_beer_cider_V0','Avg_month_beer_cider_V1','Avg_month_beer_cider_V2','Avg_month_beer_cider_V3','Avg_month_spirits_V0','Avg_month_spirits_V1','Avg_month_spirits_V2','Avg_month_spirits_V3','Avg_month_fortified_V0','Avg_month_fortified_V1','Avg_month_fortified_V2','Avg_month_fortified_V3','Avg_month_other_V0','Avg_month_other_V1','Avg_month_other_V2','Avg_month_other_V3')
+
+
+
+list_participants<-fread('../06_REML_LDSC/covar_discr_total')
+
+tab<-tab[tab$ID %in% c(subTabNoAD$f.eid),] #voir au debut comment subTabNoAD est crée. 
+
+dim(tab)
+
+
+library(dplyr)
+library(stringr)
+
+# 1️⃣ Convert -1 and -3 to NA across all visit columns
+tab <- tab %>%
+  mutate(across(matches("_V[0-3]$"), ~na_if(., -1))) %>%
+  mutate(across(matches("_V[0-3]$"), ~na_if(., -3)))
+
+# 2️⃣ Get unique prefixes (remove _V0/_V1/_V2/_V3)
+prefixes <- tab %>%
+  select(matches("_V[0-3]$")) %>%
+  names() %>%
+  str_remove("_V[0-3]$") %>%
+  unique()
+
+# 3️⃣ Create aggregated columns (same name but without visit suffix)
+for (p in prefixes) {
+  tab[[p]] <- coalesce(
+    tab[[paste0(p, "_V3")]],
+    tab[[paste0(p, "_V2")]],
+    tab[[paste0(p, "_V1")]],
+    tab[[paste0(p, "_V0")]]
+  )
+}
+
+
+library(dplyr)
+
+tabAlc<-tab[,c("ID","Avg_week_red_wine","Avg_week_champagne","Avg_week_beer_cider","Avg_week_spirits","Avg_week_fortified","Avg_month_red_wine","Avg_month_champagne","Avg_month_beer_cider"      ,"Avg_month_spirits","Avg_month_fortified")]
+
+# 1️⃣ Identify alcohol types by stripping _month/_week suffix
+alcohol_types <- names(tabAlc) %>%
+  str_extract("(?<=Avg_(month|week)_).*") %>%
+  na.omit() %>%
+  unique()
+
+tabAlc <- tabAlc %>%
+  # Convert -1 and -3 to NA
+  mutate(across(matches("^Avg_(month|week)_"), ~na_if(., -1))) %>%
+  mutate(across(matches("^Avg_(month|week)_"), ~na_if(., -3))) %>%
+  
+  rowwise() %>%
+  mutate(
+    Avg_total = {
+      combined_values <- numeric(length(alcohol_types))
+      
+      for (i in seq_along(alcohol_types)) {
+        month_val <- get(paste0("Avg_month_", alcohol_types[i]))
+        week_val  <- get(paste0("Avg_week_", alcohol_types[i]))
+        
+        combined_values[i] <- if (!is.na(month_val) & !is.na(week_val)) {
+          (week_val + month_val / 4) / 2
+        } else if (!is.na(week_val)) {
+          week_val
+        } else if (!is.na(month_val)) {
+          month_val / 4
+        } else {
+          NA_real_
+        }
+      }
+      
+      if (all(is.na(combined_values))) NA_real_ else mean(combined_values, na.rm = TRUE)
+    }
+  ) %>%
+  ungroup()
+
+
+```
+
+
+    
+
+we combine this new phenotype 'Avg_total' with Alcohol intake frequency. 
+1. we modify Alcohol intake freq to have weekly values
+2. we combine it with new pheno ie we get the mean value if both exists.
+
+```{R}
+
+library(dplyr)
+
+tab <- tab %>%
+  mutate(
+    Alcohol_intake_frequency_modified = case_when(
+      Alcohol_intake_frequency == 1  ~ 7,
+      Alcohol_intake_frequency == 2  ~ 3.5,
+      Alcohol_intake_frequency == 3  ~ 1.5,
+      Alcohol_intake_frequency == 4  ~ 0.5,
+      Alcohol_intake_frequency == 5  ~ 0.25,
+      Alcohol_intake_frequency == 6  ~ 0,
+      Alcohol_intake_frequency == -3 ~ NA_real_,
+      TRUE         ~ Alcohol_intake_frequency  # keep other values as-is (optional)
+    )
+  )
+
+
+tabAlcohol<-merge(tab[,c('ID','Alcohol_intake_frequency_modified')],tabAlc[,c('ID','Avg_total')])
+
+
+tabAlcohol <- tabAlcohol %>%
+  rowwise() %>%
+  mutate(
+    Final_Alcohol_phenotype = case_when(
+      is.na(Alcohol_intake_frequency_modified) & !is.na(Avg_total) ~ Avg_total,               # col1 NA, col2 exists
+      !is.na(Alcohol_intake_frequency_modified) & is.na(Avg_total) ~ Alcohol_intake_frequency_modified,               # col2 NA, col1 exists
+      !is.na(Alcohol_intake_frequency_modified) & !is.na(Avg_total) ~ mean(c(Alcohol_intake_frequency_modified, Avg_total)), # both exist → mean
+      TRUE ~ NA_real_                                   # both NA
+    )
+  ) %>%
+  ungroup()
+
+df<-data.frame(V1=tabAlcohol$ID,V2=tabAlcohol$ID,V3=tabAlcohol$Final_Alcohol_phenotype)
+df2<-data.frame(V1=tabAlcohol$ID,V2=tabAlcohol$ID,V3=tabAlcohol$Avg_total)
+df3<-data.frame(V1=tabAlcohol$ID,V2=tabAlcohol$ID,V3=tabAlcohol$Alcohol_intake_frequency_modified)
+
+write.table(df,'df_Alcohol_merge_phenotype',row.names=F,col.names=F,quote=F)
+write.table(df2,'df_Alcohol_week_avg',row.names=F,col.names=F,quote=F)
+write.table(df3,'df_Alcohol_intake_frequency',row.names=F,col.names=F,quote=F)
+
+
+write.table(data.frame(V1=c('Alcohol_merge_phenotype','Alcohol_week_avg','Alcohol_intake_frequency')),'pheno_Alcohol',row.names=F,col.names=F,quote=F)
+
+```
+
+
+#Run BWAS on phenotype
+```{bash,eval=F}
+
+
+pheno="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BRM_Vol"
+bods="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/REML_LDSC"
+bind="/network/iss/ukbiobank/software"
+wd="/network/iss/ukbiobank/ukbiobank-remaining/elise.delzant/BingJing/ukb-AD-traits-main"
+
+cd $wd 
+
+for proc in FS_All_moda 
+do
+${bind}/qsubshcom "pheno=\$(sed -n \"\${TASK_ID}{p;q}\" pheno_Alcohol)|;
+echo \${pheno}|;
+${bind}/osca --befile ${bods}/UKB_QC_${proc}_Total  --pheno Files/df_\${pheno} --covar ${bods}/Files/covar_discr_total --qcovar ${bods}/Files/covar2_quant_${proc}_total --linear --out Results/sstat_${proc}_total_\${pheno}|;
+" 34 200G SumStat_40k 24:00:00 "-array=1-3"
+done 
+
+
+
+
+```
+
+
+

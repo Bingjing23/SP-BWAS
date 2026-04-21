@@ -1,0 +1,24 @@
+.DS_Store
+.Rhistory
+
+# Data, outputs, and generated artifacts
+*.linear
+*.linear_random_oscaFormat
+*.log
+*.pdf
+*.docx
+*.tab
+*.tsv
+*.csv
+*.txt
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.gif
+
+# Project folders mostly contain data/results; keep only the R Markdown code file.
+AlzDisease_LMM/*
+SSTAT_BingJing/*
+!SSTAT_BingJing/16_BingJing.Rmd
