@@ -1,7 +1,12 @@
 .DS_Store
 .Rhistory
+.RData
+.Rproj.user/
 
 # Data, outputs, and generated artifacts
+outputs/
+logs/
+external_src/
 *.linear
 *.linear_random_oscaFormat
 *.log
