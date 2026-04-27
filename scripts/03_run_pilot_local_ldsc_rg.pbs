@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -N pilot_local_ldsc_rg
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=32G
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -o logs/03_run_pilot_local_ldsc_rg.pbs.log
+
+set -euo pipefail
+
+PROJECT_DIR="/workings/lab_puyag/bingjinZ/Side_Project_AD/SP-BWAS"
+if [ ! -d "${PROJECT_DIR}" ]; then
+  PROJECT_DIR="/working/lab_puyag/bingjinZ/Side_Project_AD/SP-BWAS"
+fi
+
+cd "${PROJECT_DIR}"
+
+mkdir -p logs
+
+module purge
+module load R/4.5.0
+
+export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
+export RGL_USE_NULL=TRUE
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
+
+Rscript scripts/03_run_pilot_local_ldsc_rg.R 2>&1 | tee logs/03_run_pilot_local_ldsc_rg.R.log
