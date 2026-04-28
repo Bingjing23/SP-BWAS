@@ -1,0 +1,71 @@
+
+#!/bin/bash
+
+#PBS -N ADvsHC_hyperTension
+
+#PBS -l ncpus=4,mem=16gb,walltime=02:00:00
+
+#PBS -j oe
+
+#PBS -o logs/pilot_ADvsHC__hyperTension.pbs.log
+
+set -euo pipefail
+
+cd /working/lab_puyag/bingjinZ/Side_Project_AD/SP-BWAS
+
+module purge
+
+module load R/4.5.0
+
+export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
+
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
+
+mkdir -p outputs/pilot/ADvsHC__hyperTension
+
+mkdir -p logs
+
+Rscript -e '
+
+library(brainMapR)
+
+library(GFA)
+
+cat("brainMapR:", as.character(packageVersion("brainMapR")), "\n")
+
+cat("GFA:", as.character(packageVersion("GFA")), "\n")
+
+cat("Has ldsc_rg:", "ldsc_rg" %in% ls("package:GFA"), "\n")
+
+res <- brainMapR::sumR2_regression_bivariate(
+
+  inputPath = c(
+
+    "AlzDisease_LMM/",
+
+    "outputs/pilot/derived_inputs/"
+
+  ),
+
+  bwasFile = c(
+
+    "BWAS_meta_AD_vs._HC_QC_8SD.linear_random_oscaFormat",
+
+    "sstat_FS_All_moda_total_hyperTension.Probe.linear"
+
+  ),
+
+  bwasSampleSize = c(3542, "NMISS"),
+
+  refPanel = c("AVERAGE"),
+
+  outputPath = "outputs/pilot/ADvsHC__hyperTension"
+
+)
+
+print(res)
+
+sessionInfo()
+
+' 2>&1 | tee logs/pilot_ADvsHC__hyperTension.R.log
+
