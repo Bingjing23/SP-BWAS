@@ -32,26 +32,43 @@ brainMapR::sumR2_regression_bivariate(
     "BWAS_meta_AD_vs._HC_QC_8SD.linear_random_oscaFormat",
     "sstat_FS_All_moda_total_hyperTension.Probe.linear"
   ),
-  bwasSampleSize = c(NAD, "NMISS"),
+  bwasSampleSize = c(3542, "NMISS"),
   refPanel = c("AVERAGE"),
-  outputPath = "outputs/pilot/"
+  outputPath = "outputs/pilot/brainMapR_ADvsHC_hyperTension/"
 )
 ```
 
-For the first pilot run:
+The official pilot using the inputs below has run successfully:
 
 - AD-side input: `AlzDisease_LMM/BWAS_meta_AD_vs._HC_QC_8SD.linear_random_oscaFormat`
-- Trait-side input: `SSTAT_BingJing/sstat_FS_All_moda_total_hyperTension.linear`
-- AD sample size: replace `NAD` with the confirmed AD vs HC BWAS sample size.
+- Trait-side input: `outputs/pilot/derived_inputs/sstat_FS_All_moda_total_hyperTension.Probe.linear`
+- AD sample size: fixed numeric value `3542`.
 - Trait sample size: use the `NMISS` column from the UKB trait file.
 - Reference panel: `AVERAGE`.
-- Output directory: `outputs/pilot/`.
+- Output directory: `outputs/pilot/brainMapR_ADvsHC_hyperTension/`.
 - Log directory: `logs/`.
 
 Raw input files should not be modified. UKB trait files use `Voxel` as the
 spatial identifier, while brainMapR expects `Probe`. Create derived corrected
 copies under `outputs/pilot/derived_inputs/` and rename only the header column
 `Voxel` to `Probe`.
+
+AD meta-analysis files in `AlzDisease_LMM/` do not carry `NMISS` because the
+sample size is not preserved in the meta-analysis summary statistics. Supply
+fixed numeric sample sizes for the AD-side input, and keep using `"NMISS"` for
+UKB BWAS files that contain an `NMISS` column. The currently confirmed AD
+sample sizes are:
+
+| AD trait | Sample size |
+| --- | ---: |
+| ADvsHC | 3542 |
+| MCIvsHC | 3976 |
+| Conversion1year | 1257 |
+| Conversion2years | 1199 |
+| Conversion3years | 1031 |
+| Conversion4years | 1285 |
+| Conversion5years | 1197 |
+| MMSE | 6981 |
 
 Server environment used for brainMapR:
 
@@ -61,25 +78,41 @@ module load R/4.5.0
 
 export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
 export RGL_USE_NULL=TRUE
-export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
 ```
 
-`brainMapR` installation:
+Use the narrow `bzip2` library path above for `rgl` on the QIMR HPC. Do not use
+the broader `/software/conda-envs/lib` path because it can cause
+`magick`/ImageMagick dynamic-library conflicts.
+
+Official package route:
 
 ```r
 install.packages("devtools", lib = Sys.getenv("R_LIBS_USER"),
                  repos = "https://cloud.r-project.org")
-devtools::install_github("baptisteCD/brainMapR", force = TRUE,
-                         upgrade = "never")
+devtools::install_github("jean997/GFA", force = TRUE)
+devtools::install_github("baptisteCD/brainMapR", force = TRUE)
 library(brainMapR)
+library(GFA)
 ```
 
-Before running the pilot, verify:
+The validated package versions were:
+
+- `brainMapR_1.1.0.9000`
+- `GFA_1.0.0.0449`
+
+Do not use the CRAN `GFA_1.0.5`, the older RDM
+`brainMapR_0.8.0.9000.tar.gz`, or a local replacement for `GFA::ldsc_rg()` for
+the official analysis.
+
+Before running pilot or batch jobs, verify:
 
 ```bash
-Rscript -e 'library(brainMapR); sessionInfo()'
-Rscript -e 'args(brainMapR::sumR2_regression_bivariate)'
+Rscript -e 'library(brainMapR); library(GFA); stopifnot("sumR2_regression_bivariate" %in% ls("package:brainMapR")); stopifnot("ldsc_rg" %in% ls("package:GFA")); stopifnot("snp_ldsc" %in% ls("package:GFA")); sessionInfo()'
 ```
+
+Submit long brainMapR jobs through PBS on a compute node rather than running
+long `Rscript` jobs on the login node.
 
 ## Main outputs
 
