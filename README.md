@@ -116,9 +116,10 @@ long `Rscript` jobs on the login node.
 
 ## Analysis plan
 
-The analysis proceeds in three stages: pilot, small batch, then full batch.
-This keeps the workflow reproducible while avoiding a large failed run caused
-by a simple input-format or environment issue.
+The downstream analysis proceeds from a validated pilot to the manifest-driven
+full batch. The pilot confirms the environment, package versions, input format,
+sample-size handling, and reference-panel loading. The full batch then applies
+the same workflow to the selected AD x UKB risk-factor grid.
 
 The scientific comparison is map-level rather than SNP-level: each job compares
 one AD-related BWAS map from `AlzDisease_LMM/` with one UKB risk-factor BWAS map
@@ -130,7 +131,7 @@ columns are UKB risk-factor BWAS maps.
 Current design decisions:
 
 - Use the official `brainMapR_1.1.0.9000` plus `jean997/GFA` route only.
-- Use `AVERAGE` as the primary reference panel for pilot and small batch.
+- Use `AVERAGE` as the primary reference panel for pilot and full batch.
   `UKB` can be added later as a sensitivity reference panel after the workflow
   is stable.
 - Preserve all raw input files.
@@ -144,45 +145,19 @@ Current design decisions:
   derived-input script removes that extra column when detected. Header-only
   UKB files are excluded from regenerated batch manifests.
 - Include only AD traits with confirmed sample sizes in default batch designs.
-- Exclude obvious non-analysis UKB variables such as `eid`, `sex`, and pilot
-  duplicate files from the default risk-factor batch.
+- Exclude obvious non-analysis UKB variables such as `eid`, `sex`, pilot
+  duplicate files, and header-only files from the default risk-factor batch.
 
-The current small batch is designed as a controlled scale-up from the successful
-pilot:
-
-```text
-AD maps:
-  ADvsHC
-  MCIvsHC
-
-Risk-factor maps:
-  hyperTension
-  T2D
-  hyperCholesterolemia
-  ldl_direct
-  majorDepression
-  smoking_ever
-```
-
-This gives 12 pairwise jobs. These traits were chosen because they include the
-pilot trait plus vascular/metabolic, psychiatric, and lifestyle candidates that
-are directly relevant to AD risk. This follows the meeting strategy of testing
-a small number of trait pairs first, then rolling the same workflow out to all
-selected traits. If the small batch completes cleanly, the same
-manifest-driven workflow can be extended to the full default design:
+The final submitted full-batch design was:
 
 ```text
-8 AD maps with confirmed sample sizes x 68 UKB risk-factor maps = 544 jobs
+8 AD maps with confirmed sample sizes x 66 UKB risk-factor maps = 528 jobs
 ```
 
-The full grid is a default engineering design and can be adjusted if a smaller
-core trait set is preferred.
-
-Do not interpret small-batch results as final biological conclusions. The small
-batch is primarily a workflow validation and early signal-checking step. Full
-interpretation should wait until the full batch is complete and outputs have
-been collected into comparable matrices, including gray-matter correlation and
-sumR2-style outputs where available.
+Biological interpretation should focus on the collected full-batch outputs, not
+on the pilot alone. Use cautious language such as shared spatial signal,
+map-level similarity, and gray-matter correlation; do not interpret these
+map-level BWAS comparisons as SNP-level GWAS or causal results.
 
 ### Known UKB input quirks
 
@@ -252,7 +227,6 @@ This writes:
 
 - `manifests/ad_bwas_manifest.tsv`
 - `manifests/risk_factor_bwas_manifest.tsv`
-- `manifests/brainmapr_small_batch_design.tsv`
 - `manifests/brainmapr_pairwise_design.tsv`
 
 The current default design includes the 8 AD traits with confirmed sample
@@ -260,16 +234,8 @@ sizes and excludes AD traits whose sample sizes are not yet confirmed. It also
 excludes obvious non-analysis UKB columns such as `eid`, `sex`, pilot duplicate
 files, and header-only files from the default risk-factor batch.
 
-Before running brainMapR, create derived UKB inputs with `Probe` headers. For
-the recommended small batch only:
-
-```bash
-Rscript scripts/02_fix_sumstats_headers.R \
-  --design manifests/brainmapr_small_batch_design.tsv \
-  --force
-```
-
-For the full default batch:
+Before running brainMapR, create derived UKB inputs with `Probe` headers for
+the full default batch:
 
 ```bash
 Rscript scripts/02_fix_sumstats_headers.R \
@@ -281,39 +247,21 @@ Run a dry-run path check before submitting real jobs:
 
 ```bash
 Rscript scripts/04_run_brainMapR_batch.R \
-  --design manifests/brainmapr_small_batch_design.tsv \
+  --design manifests/brainmapr_pairwise_design.tsv \
   --dry-run
-```
-
-Submit the small batch through PBS:
-
-```bash
-qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv \
-  scripts/run_brainMapR_batch.pbs
 ```
 
 To run a single pair:
 
 ```bash
-qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv,PAIR_ID=ADvsHC__hyperTension \
+qsub -v DESIGN=manifests/brainmapr_pairwise_design.tsv,PAIR_ID=ADvsHC__hyperTension \
   scripts/run_brainMapR_batch.pbs
 ```
 
-After jobs finish, collect outputs:
-
-```bash
-Rscript scripts/05_collect_brainMapR_outputs.R \
-  --design manifests/brainmapr_small_batch_design.tsv \
-  --output-dir outputs/batch/summary_small_batch
-```
-
-For full batch collection, use `manifests/brainmapr_pairwise_design.tsv` and
-write to `outputs/batch/summary/`.
-
 ## Parallel full batch
 
-After the small batch succeeds, run the full default grid as a PBS array rather
-than one serial job. Each array task runs one row of
+Run the full default grid as a PBS array rather than one serial job. Each array
+task runs one row of
 `manifests/brainmapr_pairwise_design.tsv`, so the scheduler can execute many
 AD x risk-factor pairs in parallel.
 
@@ -397,6 +345,147 @@ Rscript scripts/05_collect_brainMapR_outputs.R \
   --design manifests/brainmapr_pairwise_design.tsv \
   --output-dir outputs/batch/summary
 ```
+
+## Full batch run summary
+
+The full manifest-driven batch was run after successful pilot validation.
+
+Input distribution after manifest generation:
+
+```text
+AD BWAS files audited: 24
+AD maps included in default batch: 8
+AD maps excluded because sample size is not yet confirmed: 16
+
+UKB risk-factor BWAS files audited: 71
+UKB risk-factor maps included in default batch: 66
+UKB files excluded as non-analysis or unusable inputs: 5
+
+Full submitted grid: 8 AD maps x 66 UKB risk-factor maps = 528 jobs
+```
+
+The 8 included AD maps are the traits with Baptiste-confirmed fixed sample
+sizes:
+
+```text
+ADvsHC, MCIvsHC, Conversion1year, Conversion2years, Conversion3years,
+Conversion4years, Conversion5years, MMSE
+```
+
+Two UKB risk-factor files were excluded because they contained a header but no
+data rows:
+
+```text
+SSTAT_BingJing/sstat_FS_All_moda_total_Menopause.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_hrt_ever_used.linear
+```
+
+Three alcohol-related UKB files had an extra row-name column in the raw files.
+These were retained after derived-input correction because they contain usable
+statistics:
+
+```text
+SSTAT_BingJing/sstat_FS_All_moda_total_Alcohol_merge_phenotype.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_Alcohol_week_avg.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_alcohol_intake_frequency.linear
+```
+
+Full array outcome:
+
+```text
+Submitted jobs: 528
+Successful jobs: 488
+Failed jobs: 40
+```
+
+The 40 failures were not random. They correspond exactly to 5 UKB traits across
+all 8 AD maps:
+
+```text
+htn_i10_preimg
+med_20003_n_distinct_i2
+periodontal_k05_preimg
+psy_any_strict_preimg
+stroke
+```
+
+Each failed with the same `brainMapR` internal error:
+
+```text
+object 'BWASsignif2' not found
+```
+
+Manual QC showed that these five derived trait files contain rows but no usable
+summary statistics for regression:
+
+```text
+rows = 654002
+usable = 0
+p < 0.05 = 0
+p < 5e-8 = 0
+```
+
+Inspection of the raw rows showed `b = 0`, `se = 0`, and `p = NA`, so these are
+treated as unusable upstream BWAS outputs in the current batch rather than
+random compute failures. They should be excluded from interpretation unless
+regenerated upstream.
+
+The successful 488 jobs were collected with
+`scripts/05_collect_brainMapR_outputs.R` into `outputs/batch/summary/`.
+
+Collected summary outputs:
+
+```text
+outputs/batch/summary/brainmapr_output_files.tsv
+outputs/batch/summary/brainmapr_pairwise_results_long.tsv
+outputs/batch/summary/matrix_rGM.tsv
+outputs/batch/summary/matrix_pvalue_rGM.tsv
+outputs/batch/summary/matrix_rGM_CI_lb.tsv
+outputs/batch/summary/matrix_rGM_CI_ub.tsv
+outputs/batch/summary/matrix_rGM_se.tsv
+outputs/batch/summary/matrix_braincov.tsv
+outputs/batch/summary/matrix_m2_1.tsv
+outputs/batch/summary/matrix_m2_2.tsv
+outputs/batch/summary/failed_pairs.tsv
+outputs/batch/summary/failed_trait_error_summary.txt
+outputs/batch/summary/excluded_unusable_traits.txt
+```
+
+Summary figures and helper tables can be generated from the collected matrices:
+
+```bash
+node scripts/06_plot_brainMapR_summary.js \
+  --summary-dir outputs/batch/summary
+```
+
+This writes:
+
+```text
+outputs/batch/summary/figures/figure_1_rGM_heatmap.svg
+outputs/batch/summary/figures/figure_2_pvalue_heatmap.svg
+outputs/batch/summary/figures/figure_3_top_rGM_forest.svg
+outputs/batch/summary/figures/figure_4_batch_qc.svg
+outputs/batch/summary/top_associations.tsv
+outputs/batch/summary/out_of_range_rGM.tsv
+outputs/batch/summary/figure_generation_report.txt
+```
+
+The plotting summary for the current collected outputs is:
+
+```text
+AD maps: 8
+Risk-factor maps with successful results: 61
+Collected successful pairs: 488
+FDR-significant pairs: 299
+Out-of-range rGM estimates: 15
+Top stable associations written: 50
+```
+
+The rGM heatmap clips colors to `[-1, 1]` for readability. A small number of
+rGM estimates exceed the theoretical correlation range, for example values
+greater than 1. These are flagged in `out_of_range_rGM.tsv` and marked with `!`
+in the rGM heatmap. Treat them as unstable or boundary estimates rather than
+interpretable biological effects.
 
 ## Main outputs
 
