@@ -114,6 +114,63 @@ Rscript -e 'library(brainMapR); library(GFA); stopifnot("sumR2_regression_bivari
 Submit long brainMapR jobs through PBS on a compute node rather than running
 long `Rscript` jobs on the login node.
 
+## Analysis plan
+
+The analysis proceeds in three stages: pilot, small batch, then full batch.
+This keeps the workflow reproducible while avoiding a large failed run caused
+by a simple input-format or environment issue.
+
+The scientific comparison is map-level rather than SNP-level: each job compares
+one AD-related BWAS map from `AlzDisease_LMM/` with one UKB risk-factor BWAS map
+from `SSTAT_BingJing/` using
+`brainMapR::sumR2_regression_bivariate()`. The target output is a pairwise
+comparison table or matrix whose rows are AD-related BWAS maps and whose
+columns are UKB risk-factor BWAS maps.
+
+Current design decisions:
+
+- Use the official `brainMapR_1.1.0.9000` plus `jean997/GFA` route only.
+- Use `AVERAGE` as the primary reference panel.
+- Preserve all raw input files.
+- Use fixed numeric sample sizes for AD meta-analysis BWAS files.
+- Use the `NMISS` column for UKB risk-factor BWAS files.
+- Convert UKB `Voxel` headers to `Probe` only in derived copies under
+  `outputs/batch/derived_inputs/`.
+- Include only AD traits with confirmed sample sizes in default batch designs.
+- Exclude obvious non-analysis UKB variables such as `eid`, `sex`, and pilot
+  duplicate files from the default risk-factor batch.
+
+The current small batch is designed as a controlled scale-up from the successful
+pilot:
+
+```text
+AD maps:
+  ADvsHC
+  MCIvsHC
+
+Risk-factor maps:
+  hyperTension
+  T2D
+  hyperCholesterolemia
+  ldl_direct
+  majorDepression
+  smoking_ever
+```
+
+This gives 12 pairwise jobs. These traits were chosen because they include the
+pilot trait plus vascular/metabolic, psychiatric, and lifestyle candidates that
+are directly relevant to AD risk. If the small batch completes cleanly, the
+same manifest-driven workflow can be extended to the full default design:
+
+```text
+8 AD maps with confirmed sample sizes x 68 UKB risk-factor maps = 544 jobs
+```
+
+Do not interpret small-batch results as final biological conclusions. The small
+batch is primarily a workflow validation and early signal-checking step. Full
+interpretation should wait until the full batch is complete and outputs have
+been collected into comparable matrices.
+
 ## Batch workflow
 
 The batch workflow is manifest-driven. Do not hand-code pairwise comparisons
