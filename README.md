@@ -130,9 +130,13 @@ columns are UKB risk-factor BWAS maps.
 Current design decisions:
 
 - Use the official `brainMapR_1.1.0.9000` plus `jean997/GFA` route only.
-- Use `AVERAGE` as the primary reference panel.
+- Use `AVERAGE` as the primary reference panel for pilot and small batch.
+  `UKB` can be added later as a sensitivity reference panel after the workflow
+  is stable.
 - Preserve all raw input files.
-- Use fixed numeric sample sizes for AD meta-analysis BWAS files.
+- Use fixed numeric sample sizes for AD meta-analysis BWAS files. The currently
+  included AD sample sizes were confirmed by Baptiste because these
+  meta-analysis summary statistics do not carry `NMISS`.
 - Use the `NMISS` column for UKB risk-factor BWAS files.
 - Convert UKB `Voxel` headers to `Probe` only in derived copies under
   `outputs/batch/derived_inputs/`.
@@ -159,17 +163,23 @@ Risk-factor maps:
 
 This gives 12 pairwise jobs. These traits were chosen because they include the
 pilot trait plus vascular/metabolic, psychiatric, and lifestyle candidates that
-are directly relevant to AD risk. If the small batch completes cleanly, the
-same manifest-driven workflow can be extended to the full default design:
+are directly relevant to AD risk. This follows the meeting strategy of testing
+a small number of trait pairs first, then rolling the same workflow out to all
+selected traits. If the small batch completes cleanly, the same
+manifest-driven workflow can be extended to the full default design:
 
 ```text
 8 AD maps with confirmed sample sizes x 68 UKB risk-factor maps = 544 jobs
 ```
 
+The full grid is a default engineering design and can be adjusted if a smaller
+core trait set is preferred.
+
 Do not interpret small-batch results as final biological conclusions. The small
 batch is primarily a workflow validation and early signal-checking step. Full
 interpretation should wait until the full batch is complete and outputs have
-been collected into comparable matrices.
+been collected into comparable matrices, including gray-matter correlation and
+sumR2-style outputs where available.
 
 ## Batch workflow
 
@@ -223,14 +233,16 @@ the recommended small batch only:
 
 ```bash
 Rscript scripts/02_fix_sumstats_headers.R \
-  --design manifests/brainmapr_small_batch_design.tsv
+  --design manifests/brainmapr_small_batch_design.tsv \
+  --force
 ```
 
 For the full default batch:
 
 ```bash
 Rscript scripts/02_fix_sumstats_headers.R \
-  --design manifests/brainmapr_pairwise_design.tsv
+  --design manifests/brainmapr_pairwise_design.tsv \
+  --force
 ```
 
 Run a dry-run path check before submitting real jobs:

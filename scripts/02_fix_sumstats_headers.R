@@ -87,7 +87,10 @@ stream_copy_with_probe_header <- function(input_file, output_file, force = FALSE
   }
 
   columns[columns == "Voxel"] <- "Probe"
-  writeLines(paste(columns, collapse = "\t"), out_con)
+  # Keep the derived header whitespace-delimited like the original OSCA files.
+  # Mixing a tab-delimited header with space-delimited data can make vroom fail
+  # to guess the delimiter inside brainMapR/GFA.
+  writeLines(paste(columns, collapse = " "), out_con)
 
   repeat {
     chunk <- readLines(in_con, n = 100000, warn = FALSE)
