@@ -184,6 +184,35 @@ interpretation should wait until the full batch is complete and outputs have
 been collected into comparable matrices, including gray-matter correlation and
 sumR2-style outputs where available.
 
+### Known UKB input quirks
+
+Three alcohol-related UKB BWAS files were observed to have 9 header fields but
+10 fields in data rows because `write.table()` preserved row names:
+
+```text
+SSTAT_BingJing/sstat_FS_All_moda_total_Alcohol_merge_phenotype.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_Alcohol_week_avg.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_alcohol_intake_frequency.linear
+```
+
+Their raw rows start with an extra row-name field before the actual `Chr`
+value. If this field is not removed, columns shift and `b` is read as `*`,
+causing `brainMapR` to fail with an error such as
+`non-numeric argument to binary operator`. Do not edit these raw files in place.
+`scripts/02_fix_sumstats_headers.R` detects this pattern in derived copies and
+removes the extra first field while also renaming `Voxel` to `Probe`.
+
+Two hormonal/sex-specific UKB files were observed to contain headers but no
+data rows and should be excluded unless regenerated:
+
+```text
+SSTAT_BingJing/sstat_FS_All_moda_total_Menopause.linear
+SSTAT_BingJing/sstat_FS_All_moda_total_hrt_ever_used.linear
+```
+
+Regenerating manifests after these checks should exclude header-only files from
+the default full batch.
+
 ## Batch workflow
 
 The batch workflow is manifest-driven. Do not hand-code pairwise comparisons
@@ -228,8 +257,8 @@ This writes:
 
 The current default design includes the 8 AD traits with confirmed sample
 sizes and excludes AD traits whose sample sizes are not yet confirmed. It also
-excludes obvious non-analysis UKB columns such as `eid`, `sex`, and pilot
-duplicate files from the default risk-factor batch.
+excludes obvious non-analysis UKB columns such as `eid`, `sex`, pilot duplicate
+files, and header-only files from the default risk-factor batch.
 
 Before running brainMapR, create derived UKB inputs with `Probe` headers. For
 the recommended small batch only:
@@ -291,10 +320,29 @@ AD x risk-factor pairs in parallel.
 Prepare all full-batch derived inputs first:
 
 ```bash
+Rscript scripts/00_check_inputs.R
+Rscript scripts/01_make_manifests.R
 Rscript scripts/02_fix_sumstats_headers.R \
   --design manifests/brainmapr_pairwise_design.tsv \
   --force
 ```
+
+Verify that the known row-name alcohol files were corrected in derived copies:
+
+```bash
+for f in \
+  outputs/batch/derived_inputs/sstat_FS_All_moda_total_Alcohol_merge_phenotype.Probe.linear \
+  outputs/batch/derived_inputs/sstat_FS_All_moda_total_Alcohol_week_avg.Probe.linear \
+  outputs/batch/derived_inputs/sstat_FS_All_moda_total_alcohol_intake_frequency.Probe.linear
+do
+  echo "==== $f ===="
+  awk 'NR == 1 {print "header_NF=" NF, $0}
+       NR == 2 {print "row2_NF=" NF, $0}' "$f"
+done
+```
+
+Each file should report `header_NF=9` and `row2_NF=9`, and row 2 should start
+with the true `Chr` value rather than a row name.
 
 Confirm the number of jobs:
 
@@ -303,7 +351,9 @@ full_n=$(($(wc -l < manifests/brainmapr_pairwise_design.tsv) - 1))
 echo "$full_n"
 ```
 
-The current expected value is `544`.
+The expected value depends on whether header-only files are excluded. After
+excluding `Menopause` and `hrt_ever_used`, the expected value is `528`
+(`8 AD maps x 66 UKB risk-factor maps`).
 
 Submit the full batch as an array:
 
