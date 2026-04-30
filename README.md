@@ -278,6 +278,73 @@ Rscript scripts/05_collect_brainMapR_outputs.R \
 For full batch collection, use `manifests/brainmapr_pairwise_design.tsv` and
 write to `outputs/batch/summary/`.
 
+## Parallel full batch
+
+After the small batch succeeds, run the full default grid as a PBS array rather
+than one serial job. Each array task runs one row of
+`manifests/brainmapr_pairwise_design.tsv`, so the scheduler can execute many
+AD x risk-factor pairs in parallel.
+
+Prepare all full-batch derived inputs first:
+
+```bash
+Rscript scripts/02_fix_sumstats_headers.R \
+  --design manifests/brainmapr_pairwise_design.tsv \
+  --force
+```
+
+Confirm the number of jobs:
+
+```bash
+full_n=$(($(wc -l < manifests/brainmapr_pairwise_design.tsv) - 1))
+echo "$full_n"
+```
+
+The current expected value is `544`.
+
+Submit the full batch as an array:
+
+```bash
+qsub -J 1-${full_n} \
+  -v DESIGN=manifests/brainmapr_pairwise_design.tsv \
+  scripts/run_brainMapR_batch_array.pbs
+```
+
+If the cluster limits the number of simultaneous array tasks, use the local
+PBS syntax for throttling, for example `-J 1-${full_n}%40` if supported. If
+array throttling is not supported, submit smaller ranges manually:
+
+```bash
+qsub -J 1-100 -v DESIGN=manifests/brainmapr_pairwise_design.tsv scripts/run_brainMapR_batch_array.pbs
+qsub -J 101-200 -v DESIGN=manifests/brainmapr_pairwise_design.tsv scripts/run_brainMapR_batch_array.pbs
+```
+
+Monitor:
+
+```bash
+qstat -u $USER
+ls -lh logs/brainMapR_array.*.R.log | tail
+```
+
+After the array finishes, check pair statuses:
+
+```bash
+find outputs/batch/brainMapR_pairs -name run_status.tsv \
+  -exec awk -F '\t' 'NR > 1 {print $4}' {} \; | sort | uniq -c
+```
+
+Any failed pair writes its own status file under
+`outputs/batch/brainMapR_pairs/<pair_id>/run_status.tsv` and a compact failure
+record under `outputs/batch/failures/`.
+
+Collect full-batch outputs:
+
+```bash
+Rscript scripts/05_collect_brainMapR_outputs.R \
+  --design manifests/brainmapr_pairwise_design.tsv \
+  --output-dir outputs/batch/summary
+```
+
 ## Main outputs
 
 - Phenotype tables such as `df_*`

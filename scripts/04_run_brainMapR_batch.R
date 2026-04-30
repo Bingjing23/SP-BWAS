@@ -17,6 +17,9 @@
 #   Rscript scripts/04_run_brainMapR_batch.R \
 #     --design manifests/brainmapr_small_batch_design.tsv \
 #     --pair-id ADvsHC__hyperTension
+#   Rscript scripts/04_run_brainMapR_batch.R \
+#     --design manifests/brainmapr_pairwise_design.tsv \
+#     --row-index 1
 
 options(stringsAsFactors = FALSE)
 
@@ -25,6 +28,7 @@ parse_args <- function(args) {
     project_root = ".",
     design = "manifests/brainmapr_small_batch_design.tsv",
     pair_id = "",
+    row_index = NA_integer_,
     max_pairs = NA_integer_,
     dry_run = FALSE,
     continue_on_error = FALSE
@@ -47,13 +51,16 @@ parse_args <- function(args) {
     } else if (key == "--pair-id") {
       i <- i + 1
       opts$pair_id <- args[[i]]
+    } else if (key == "--row-index") {
+      i <- i + 1
+      opts$row_index <- as.integer(args[[i]])
     } else if (key == "--max-pairs") {
       i <- i + 1
       opts$max_pairs <- as.integer(args[[i]])
     } else if (key %in% c("--dry-run", "--continue-on-error")) {
       # already handled
     } else if (key %in% c("-h", "--help")) {
-      cat("Usage: Rscript scripts/04_run_brainMapR_batch.R [--design <tsv>] [--pair-id <id>] [--dry-run]\n")
+      cat("Usage: Rscript scripts/04_run_brainMapR_batch.R [--design <tsv>] [--pair-id <id>] [--row-index <n>] [--dry-run]\n")
       quit(save = "no", status = 0)
     } else {
       stop("Unknown argument: ", key)
@@ -170,6 +177,15 @@ design <- read.delim(design_path, check.names = FALSE)
 if (!"pair_id" %in% names(design)) {
   stop("Design table is missing pair_id column: ", design_path)
 }
+if (!is.na(opts$row_index)) {
+  if (opts$row_index < 1 || opts$row_index > nrow(design)) {
+    stop(
+      "Requested row index ", opts$row_index,
+      " outside design range 1-", nrow(design)
+    )
+  }
+  design <- design[opts$row_index, , drop = FALSE]
+}
 if (nzchar(opts$pair_id)) {
   design <- design[design$pair_id == opts$pair_id, , drop = FALSE]
 }
@@ -212,10 +228,18 @@ for (i in seq_len(nrow(design))) {
 
 if (length(failures) > 0) {
   failure_df <- do.call(rbind, failures)
-  dir.create(file.path(root, "outputs/batch"), recursive = TRUE, showWarnings = FALSE)
-  write.table(failure_df, file.path(root, "outputs/batch/brainmapr_failures.tsv"),
+  failure_dir <- file.path(root, "outputs/batch/failures")
+  dir.create(failure_dir, recursive = TRUE, showWarnings = FALSE)
+  failure_file <- file.path(
+    failure_dir,
+    paste0(
+      gsub("[^A-Za-z0-9_.-]+", "_", failure_df$pair_id[[1]]),
+      ".failure.tsv"
+    )
+  )
+  write.table(failure_df, failure_file,
               sep = "\t", row.names = FALSE, quote = FALSE)
-  stop("One or more pairs failed. See outputs/batch/brainmapr_failures.tsv")
+  stop("One or more pairs failed. See ", failure_file)
 }
 
 cat("Selected brainMapR jobs completed successfully.\n")

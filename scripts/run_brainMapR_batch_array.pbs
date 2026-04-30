@@ -1,0 +1,47 @@
+#!/bin/bash
+
+#PBS -N brainMapR_array
+#PBS -l ncpus=4,mem=16gb,walltime=12:00:00
+#PBS -j oe
+#PBS -o logs/brainMapR_array.pbs.log
+
+# Submit from the project root after creating full derived inputs:
+#   qsub -J 1-544 scripts/run_brainMapR_batch_array.pbs
+#
+# Optional:
+#   qsub -J 1-544 -v DESIGN=manifests/brainmapr_pairwise_design.tsv scripts/run_brainMapR_batch_array.pbs
+#
+# Some PBS installations use PBS_ARRAYID instead of PBS_ARRAY_INDEX. This
+# script accepts either variable.
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR:-/working/lab_puyag/bingjinZ/Side_Project_AD/SP-BWAS}"
+
+module purge
+module load R/4.5.0
+
+export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
+export RGL_USE_NULL=TRUE
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
+
+mkdir -p logs outputs/batch/failures
+
+DESIGN="${DESIGN:-manifests/brainmapr_pairwise_design.tsv}"
+ROW_INDEX="${PBS_ARRAY_INDEX:-${PBS_ARRAYID:-}}"
+
+if [[ -z "$ROW_INDEX" ]]; then
+  echo "Could not find PBS array index in PBS_ARRAY_INDEX or PBS_ARRAYID" >&2
+  exit 2
+fi
+
+LOG_FILE="logs/brainMapR_array.${ROW_INDEX}.$(date +%Y%m%d_%H%M%S).R.log"
+
+cmd=(
+  Rscript scripts/04_run_brainMapR_batch.R
+  --design "$DESIGN"
+  --row-index "$ROW_INDEX"
+)
+
+echo "Running array row ${ROW_INDEX}: ${cmd[*]}"
+"${cmd[@]}" 2>&1 | tee "$LOG_FILE"
