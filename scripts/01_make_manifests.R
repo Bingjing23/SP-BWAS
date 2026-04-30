@@ -75,6 +75,10 @@ safe_read_header <- function(path) {
   scan(text = header, what = character(), quiet = TRUE)
 }
 
+has_data_rows <- function(path) {
+  length(readLines(path, n = 2, warn = FALSE)) >= 2
+}
+
 infer_ad_id <- function(file_name) {
   known <- c(
     "BWAS_meta_AD_vs._HC_QC_8SD.linear_random_oscaFormat" = "ADvsHC",
@@ -172,6 +176,7 @@ ad_manifest <- do.call(rbind, lapply(ad_files, function(path) {
     NA_real_
   }
   has_sample_size <- !is.null(sample_size) && !is.na(sample_size)
+  has_data <- has_data_rows(path)
   data.frame(
     ad_id = ad_id,
     phenotype = ad_id,
@@ -179,8 +184,14 @@ ad_manifest <- do.call(rbind, lapply(ad_files, function(path) {
     file_name = file_name,
     sample_size = if (has_sample_size) sample_size else NA_real_,
     sample_size_source = if (has_sample_size) "fixed_numeric_confirmed" else "missing_unconfirmed",
-    include = has_sample_size && "Probe" %in% columns,
-    notes = if (has_sample_size) "confirmed by Baptiste" else "sample size not yet confirmed",
+    include = has_sample_size && has_data && "Probe" %in% columns,
+    notes = if (!has_data) {
+      "no data rows"
+    } else if (has_sample_size) {
+      "confirmed by Baptiste"
+    } else {
+      "sample size not yet confirmed"
+    },
     stringsAsFactors = FALSE
   )
 }))
@@ -197,7 +208,9 @@ risk_manifest <- do.call(rbind, lapply(risk_files, function(path) {
     relative_path(path, root)
   }
   category <- infer_category(trait_id)
+  has_data <- has_data_rows(path)
   include <- category != "exclude_candidate" &&
+    has_data &&
     "NMISS" %in% columns &&
     (has_probe || has_voxel)
   data.frame(
@@ -212,7 +225,13 @@ risk_manifest <- do.call(rbind, lapply(risk_files, function(path) {
     has_Voxel = has_voxel,
     needs_Voxel_to_Probe = !has_probe && has_voxel,
     include = include,
-    notes = if (include) "candidate risk-factor BWAS" else "excluded from default batch",
+    notes = if (!has_data) {
+      "no data rows"
+    } else if (include) {
+      "candidate risk-factor BWAS"
+    } else {
+      "excluded from default batch"
+    },
     stringsAsFactors = FALSE
   )
 }))

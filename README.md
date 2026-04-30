@@ -140,6 +140,9 @@ Current design decisions:
 - Use the `NMISS` column for UKB risk-factor BWAS files.
 - Convert UKB `Voxel` headers to `Probe` only in derived copies under
   `outputs/batch/derived_inputs/`.
+- Some UKB files were written with an extra row-name column before `Chr`; the
+  derived-input script removes that extra column when detected. Header-only
+  UKB files are excluded from regenerated batch manifests.
 - Include only AD traits with confirmed sample sizes in default batch designs.
 - Exclude obvious non-analysis UKB variables such as `eid`, `sex`, and pilot
   duplicate files from the default risk-factor batch.

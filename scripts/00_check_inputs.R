@@ -88,6 +88,10 @@ safe_read_header <- function(path) {
   list(readable = TRUE, columns = columns, issue = "")
 }
 
+has_data_rows <- function(path) {
+  length(readLines(path, n = 2, warn = FALSE)) >= 2
+}
+
 has_any <- function(columns, candidates) {
   any(tolower(columns) %in% tolower(candidates))
 }
@@ -164,6 +168,7 @@ readiness_row <- function(path, root, group) {
   issue <- header$issue
   if (header$readable) {
     missing <- character()
+    if (!has_data_rows(path)) missing <- c(missing, "no data rows")
     if (!has_probe && !has_voxel) missing <- c(missing, "missing Probe/Voxel")
     if (!has_beta) missing <- c(missing, "missing beta")
     if (!has_se) missing <- c(missing, "missing se")
@@ -177,6 +182,7 @@ readiness_row <- function(path, root, group) {
   }
 
   ready <- header$readable &&
+    has_data_rows(path) &&
     has_probe &&
     has_beta &&
     has_se &&
@@ -228,6 +234,7 @@ ad_inventory <- do.call(rbind, lapply(ad_files, function(path) {
   file_name <- basename(path)
   sample_source <- if ("NMISS" %in% columns) "NMISS" else "fixed_numeric_required"
   ready <- header$readable &&
+    has_data_rows(path) &&
     "Probe" %in% columns &&
     has_any(columns, c("b", "beta", "BETA")) &&
     has_any(columns, c("se", "SE")) &&
@@ -240,7 +247,13 @@ ad_inventory <- do.call(rbind, lapply(ad_files, function(path) {
     first_columns = paste(head(columns, 12), collapse = ","),
     sample_size_source = sample_source,
     ready_for_brainMapR = ready,
-    notes = if (ready) "AD meta-analysis requires fixed numeric sample size" else header$issue,
+    notes = if (ready) {
+      "AD meta-analysis requires fixed numeric sample size"
+    } else if (!has_data_rows(path)) {
+      "no data rows"
+    } else {
+      header$issue
+    },
     stringsAsFactors = FALSE
   )
 }))
@@ -253,6 +266,7 @@ risk_inventory <- do.call(rbind, lapply(risk_files, function(path) {
   has_probe <- "Probe" %in% columns
   has_voxel <- "Voxel" %in% columns
   ready <- header$readable &&
+    has_data_rows(path) &&
     has_probe &&
     "NMISS" %in% columns &&
     has_any(columns, c("b", "beta", "BETA")) &&
@@ -260,6 +274,8 @@ risk_inventory <- do.call(rbind, lapply(risk_files, function(path) {
     has_any(columns, c("p", "P", "p_value", "PVAL"))
   notes <- if (ready) {
     "ready"
+  } else if (!has_data_rows(path)) {
+    "no data rows"
   } else if (!has_probe && has_voxel) {
     "requires derived Probe copy from Voxel header"
   } else {
@@ -287,6 +303,17 @@ if (length(missing_or_unreadable) > 0) {
     affected_files = paste(missing_or_unreadable, collapse = ";"),
     severity = "high",
     proposed_fix = "Restore or replace the affected input files before batch analysis",
+    stringsAsFactors = FALSE
+  )))
+}
+
+no_data_rows <- readiness$file[readiness$readable & grepl("no data rows", readiness$issue)]
+if (length(no_data_rows) > 0) {
+  blockers <- c(blockers, list(data.frame(
+    blocker = "Input files have headers but no data rows",
+    affected_files = paste(no_data_rows, collapse = ";"),
+    severity = "high",
+    proposed_fix = "Exclude these files from batch analysis or regenerate the BWAS outputs with data rows",
     stringsAsFactors = FALSE
   )))
 }

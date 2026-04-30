@@ -86,16 +86,46 @@ stream_copy_with_probe_header <- function(input_file, output_file, force = FALSE
     stop("Input already contains Probe column: ", input_file)
   }
 
+  first_data_line <- readLines(in_con, n = 1, warn = FALSE)
+  if (length(first_data_line) == 0) {
+    stop("Input file has a header but no data rows: ", input_file)
+  }
+
+  count_fields <- function(line) {
+    length(scan(text = line, what = character(), quiet = TRUE))
+  }
+  data_field_count <- count_fields(first_data_line)
+  expected_field_count <- length(columns)
+  has_extra_row_name <- data_field_count == expected_field_count + 1
+  if (!has_extra_row_name && data_field_count != expected_field_count) {
+    stop(
+      "Unexpected data-column count in ", input_file,
+      ": header has ", expected_field_count,
+      " fields but first data row has ", data_field_count
+    )
+  }
+
+  drop_first_field <- function(lines) {
+    sub("^\\s*(\"[^\"]*\"|\\S+)\\s+", "", lines)
+  }
+
   columns[columns == "Voxel"] <- "Probe"
   # Keep the derived header whitespace-delimited like the original OSCA files.
   # Mixing a tab-delimited header with space-delimited data can make vroom fail
   # to guess the delimiter inside brainMapR/GFA.
   writeLines(paste(columns, collapse = " "), out_con)
+  writeLines(
+    if (has_extra_row_name) drop_first_field(first_data_line) else first_data_line,
+    out_con
+  )
 
   repeat {
     chunk <- readLines(in_con, n = 100000, warn = FALSE)
     if (length(chunk) == 0) {
       break
+    }
+    if (has_extra_row_name) {
+      chunk <- drop_first_field(chunk)
     }
     writeLines(chunk, out_con)
   }
