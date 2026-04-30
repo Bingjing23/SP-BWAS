@@ -114,6 +114,101 @@ Rscript -e 'library(brainMapR); library(GFA); stopifnot("sumR2_regression_bivari
 Submit long brainMapR jobs through PBS on a compute node rather than running
 long `Rscript` jobs on the login node.
 
+## Batch workflow
+
+The batch workflow is manifest-driven. Do not hand-code pairwise comparisons
+one by one.
+
+From the project root on the HPC:
+
+```bash
+module purge
+module load R/4.5.0
+
+export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
+export RGL_USE_NULL=TRUE
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
+```
+
+First audit all AD and risk-factor BWAS inputs:
+
+```bash
+Rscript scripts/00_check_inputs.R
+```
+
+This writes:
+
+- `outputs/input_audit/ad_bwas_inventory.tsv`
+- `outputs/input_audit/risk_factor_bwas_inventory.tsv`
+- `outputs/input_audit/input_readiness.tsv`
+- `outputs/input_audit/blockers.tsv`
+
+Then build the manifests and pairwise design tables:
+
+```bash
+Rscript scripts/01_make_manifests.R
+```
+
+This writes:
+
+- `manifests/ad_bwas_manifest.tsv`
+- `manifests/risk_factor_bwas_manifest.tsv`
+- `manifests/brainmapr_small_batch_design.tsv`
+- `manifests/brainmapr_pairwise_design.tsv`
+
+The current default design includes the 8 AD traits with confirmed sample
+sizes and excludes AD traits whose sample sizes are not yet confirmed. It also
+excludes obvious non-analysis UKB columns such as `eid`, `sex`, and pilot
+duplicate files from the default risk-factor batch.
+
+Before running brainMapR, create derived UKB inputs with `Probe` headers. For
+the recommended small batch only:
+
+```bash
+Rscript scripts/02_fix_sumstats_headers.R \
+  --design manifests/brainmapr_small_batch_design.tsv
+```
+
+For the full default batch:
+
+```bash
+Rscript scripts/02_fix_sumstats_headers.R \
+  --design manifests/brainmapr_pairwise_design.tsv
+```
+
+Run a dry-run path check before submitting real jobs:
+
+```bash
+Rscript scripts/04_run_brainMapR_batch.R \
+  --design manifests/brainmapr_small_batch_design.tsv \
+  --dry-run
+```
+
+Submit the small batch through PBS:
+
+```bash
+qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv \
+  scripts/run_brainMapR_batch.pbs
+```
+
+To run a single pair:
+
+```bash
+qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv,PAIR_ID=ADvsHC__hyperTension \
+  scripts/run_brainMapR_batch.pbs
+```
+
+After jobs finish, collect outputs:
+
+```bash
+Rscript scripts/05_collect_brainMapR_outputs.R \
+  --design manifests/brainmapr_small_batch_design.tsv \
+  --output-dir outputs/batch/summary_small_batch
+```
+
+For full batch collection, use `manifests/brainmapr_pairwise_design.tsv` and
+write to `outputs/batch/summary/`.
+
 ## Main outputs
 
 - Phenotype tables such as `df_*`

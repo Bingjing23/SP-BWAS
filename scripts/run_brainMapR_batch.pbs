@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#PBS -N brainMapR_batch
+#PBS -l ncpus=4,mem=16gb,walltime=12:00:00
+#PBS -j oe
+#PBS -o logs/brainMapR_batch.pbs.log
+
+# Submit from the project root:
+#   qsub scripts/run_brainMapR_batch.pbs
+#
+# Optional variables:
+#   qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv scripts/run_brainMapR_batch.pbs
+#   qsub -v PAIR_ID=ADvsHC__hyperTension scripts/run_brainMapR_batch.pbs
+#   qsub -v CONTINUE_ON_ERROR=1 scripts/run_brainMapR_batch.pbs
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR:-/working/lab_puyag/bingjinZ/Side_Project_AD/SP-BWAS}"
+
+module purge
+module load R/4.5.0
+
+export R_LIBS_USER=/mnt/backedup/home/bingjinZ/Rlibs/R-4.5.0
+export RGL_USE_NULL=TRUE
+export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD_LIBRARY_PATH:-}
+
+mkdir -p logs outputs/batch
+
+DESIGN="${DESIGN:-manifests/brainmapr_small_batch_design.tsv}"
+PAIR_ID="${PAIR_ID:-}"
+CONTINUE_ON_ERROR="${CONTINUE_ON_ERROR:-0}"
+
+cmd=(Rscript scripts/04_run_brainMapR_batch.R --design "$DESIGN")
+
+if [[ -n "$PAIR_ID" ]]; then
+  cmd+=(--pair-id "$PAIR_ID")
+fi
+
+if [[ "$CONTINUE_ON_ERROR" == "1" ]]; then
+  cmd+=(--continue-on-error)
+fi
+
+echo "Running: ${cmd[*]}"
+"${cmd[@]}" 2>&1 | tee "logs/brainMapR_batch.$(date +%Y%m%d_%H%M%S).R.log"

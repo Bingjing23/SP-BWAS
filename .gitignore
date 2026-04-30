@@ -23,6 +23,10 @@ external_src/
 *.tiff
 *.gif
 
+# Analysis design metadata should remain versionable.
+!manifests/
+!manifests/*.tsv
+
 # Project folders mostly contain data/results; keep only the R Markdown code file.
 AlzDisease_LMM/*
 SSTAT_BingJing/*
