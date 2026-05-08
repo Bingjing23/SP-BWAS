@@ -134,6 +134,10 @@ Current design decisions:
 - Use `AVERAGE` as the primary reference panel for pilot and full batch.
   `UKB` can be added later as a sensitivity reference panel after the workflow
   is stable.
+- Run `brainMapR::sumR2_regression_bivariate()` with
+  `varConstrained = TRUE` explicitly set. This is the current BrainMapR default,
+  but the batch wrapper passes it explicitly so variance-constrained rGM
+  estimates are reproducible.
 - Preserve all raw input files.
 - Use fixed numeric sample sizes for AD meta-analysis BWAS files. The currently
   included AD sample sizes were confirmed by Baptiste because these
@@ -228,18 +232,29 @@ This writes:
 - `manifests/ad_bwas_manifest.tsv`
 - `manifests/risk_factor_bwas_manifest.tsv`
 - `manifests/brainmapr_pairwise_design.tsv`
+- `manifests/brainmapr_clean_average_design.tsv`
+- `manifests/brainmapr_clean_ukb_design.tsv`
 
 The current default design includes the 8 AD traits with confirmed sample
 sizes and excludes AD traits whose sample sizes are not yet confirmed. It also
 excludes obvious non-analysis UKB columns such as `eid`, `sex`, pilot duplicate
 files, and header-only files from the default risk-factor batch.
 
+The clean design follows Baptiste's review comments. It removes specific
+alcohol beverage variables, keeps global alcohol measures, keeps `T2D` as the
+selected diabetes variable, keeps more clinical psychiatric diagnoses rather
+than broad/pre-imaging definitions, and excludes currently unusable upstream
+BWAS traits until they are regenerated or confirmed.
+
 Before running brainMapR, create derived UKB inputs with `Probe` headers for
-the full default batch:
+the clean AVERAGE and UKB designs:
 
 ```bash
 Rscript scripts/02_fix_sumstats_headers.R \
-  --design manifests/brainmapr_pairwise_design.tsv \
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --force
+Rscript scripts/02_fix_sumstats_headers.R \
+  --design manifests/brainmapr_clean_ukb_design.tsv \
   --force
 ```
 
@@ -247,22 +262,26 @@ Run a dry-run path check before submitting real jobs:
 
 ```bash
 Rscript scripts/04_run_brainMapR_batch.R \
-  --design manifests/brainmapr_pairwise_design.tsv \
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --dry-run
+Rscript scripts/04_run_brainMapR_batch.R \
+  --design manifests/brainmapr_clean_ukb_design.tsv \
   --dry-run
 ```
 
 To run a single pair:
 
 ```bash
-qsub -v DESIGN=manifests/brainmapr_pairwise_design.tsv,PAIR_ID=ADvsHC__hyperTension \
+qsub -v DESIGN=manifests/brainmapr_clean_average_design.tsv,PAIR_ID=ADvsHC__hyperTension \
   scripts/run_brainMapR_batch.pbs
 ```
 
-## Parallel full batch
+## Parallel clean batch
 
-Run the full default grid as a PBS array rather than one serial job. Each array
+Run the clean grid as a PBS array rather than one serial job. Each array
 task runs one row of
-`manifests/brainmapr_pairwise_design.tsv`, so the scheduler can execute many
+`manifests/brainmapr_clean_average_design.tsv` or
+`manifests/brainmapr_clean_ukb_design.tsv`, so the scheduler can execute many
 AD x risk-factor pairs in parallel.
 
 Prepare all full-batch derived inputs first:
@@ -271,7 +290,10 @@ Prepare all full-batch derived inputs first:
 Rscript scripts/00_check_inputs.R
 Rscript scripts/01_make_manifests.R
 Rscript scripts/02_fix_sumstats_headers.R \
-  --design manifests/brainmapr_pairwise_design.tsv \
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --force
+Rscript scripts/02_fix_sumstats_headers.R \
+  --design manifests/brainmapr_clean_ukb_design.tsv \
   --force
 ```
 
@@ -295,19 +317,25 @@ with the true `Chr` value rather than a row name.
 Confirm the number of jobs:
 
 ```bash
-full_n=$(($(wc -l < manifests/brainmapr_pairwise_design.tsv) - 1))
-echo "$full_n"
+average_n=$(($(wc -l < manifests/brainmapr_clean_average_design.tsv) - 1))
+ukb_n=$(($(wc -l < manifests/brainmapr_clean_ukb_design.tsv) - 1))
+echo "AVERAGE jobs: $average_n"
+echo "UKB jobs: $ukb_n"
 ```
 
-The expected value depends on whether header-only files are excluded. After
-excluding `Menopause` and `hrt_ever_used`, the expected value is `528`
-(`8 AD maps x 66 UKB risk-factor maps`).
-
-Submit the full batch as an array:
+Submit the clean AVERAGE batch as an array:
 
 ```bash
-qsub -J 1-${full_n} \
-  -v DESIGN=manifests/brainmapr_pairwise_design.tsv \
+qsub -J 1-${average_n} \
+  -v DESIGN=manifests/brainmapr_clean_average_design.tsv \
+  scripts/run_brainMapR_batch_array.pbs
+```
+
+Submit the clean UKB reference-panel sensitivity batch as a second array:
+
+```bash
+qsub -J 1-${ukb_n} \
+  -v DESIGN=manifests/brainmapr_clean_ukb_design.tsv \
   scripts/run_brainMapR_batch_array.pbs
 ```
 
@@ -330,7 +358,9 @@ ls -lh logs/brainMapR_array.*.R.log | tail
 After the array finishes, check pair statuses:
 
 ```bash
-find outputs/batch/brainMapR_pairs -name run_status.tsv \
+find outputs/batch/brainMapR_pairs_clean_AVERAGE -name run_status.tsv \
+  -exec awk -F '\t' 'NR > 1 {print $4}' {} \; | sort | uniq -c
+find outputs/batch/brainMapR_pairs_clean_UKB -name run_status.tsv \
   -exec awk -F '\t' 'NR > 1 {print $4}' {} \; | sort | uniq -c
 ```
 
@@ -342,8 +372,21 @@ Collect full-batch outputs:
 
 ```bash
 Rscript scripts/05_collect_brainMapR_outputs.R \
-  --design manifests/brainmapr_pairwise_design.tsv \
-  --output-dir outputs/batch/summary
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --output-dir outputs/batch/summary_clean_AVERAGE
+Rscript scripts/05_collect_brainMapR_outputs.R \
+  --design manifests/brainmapr_clean_ukb_design.tsv \
+  --output-dir outputs/batch/summary_clean_UKB
+```
+
+Generate PNG/TIFF figures with readable labels, vertical UKB-trait layout,
+Bonferroni/FWER markers, and optional AVERAGE-vs-UKB sensitivity scatter:
+
+```bash
+Rscript scripts/06_plot_brainMapR_summary.R \
+  --summary-dir outputs/batch/summary_clean_AVERAGE \
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --compare-summary-dir outputs/batch/summary_clean_UKB
 ```
 
 ## Full batch run summary
@@ -451,26 +494,34 @@ outputs/batch/summary/failed_trait_error_summary.txt
 outputs/batch/summary/excluded_unusable_traits.txt
 ```
 
-Summary figures and helper tables can be generated from the collected matrices:
+For the reviewed clean rerun, generate PNG/TIFF figures and helper tables from
+the collected matrices with:
 
 ```bash
-node scripts/06_plot_brainMapR_summary.js \
-  --summary-dir outputs/batch/summary
+Rscript scripts/06_plot_brainMapR_summary.R \
+  --summary-dir outputs/batch/summary_clean_AVERAGE \
+  --design manifests/brainmapr_clean_average_design.tsv \
+  --compare-summary-dir outputs/batch/summary_clean_UKB
 ```
 
 This writes:
 
 ```text
-outputs/batch/summary/figures/figure_1_rGM_heatmap.svg
-outputs/batch/summary/figures/figure_2_pvalue_heatmap.svg
-outputs/batch/summary/figures/figure_3_top_rGM_forest.svg
-outputs/batch/summary/figures/figure_4_batch_qc.svg
-outputs/batch/summary/top_associations.tsv
-outputs/batch/summary/out_of_range_rGM.tsv
-outputs/batch/summary/figure_generation_report.txt
+outputs/batch/summary_clean_AVERAGE/figures/figure_1_vertical_rGM_heatmap.png
+outputs/batch/summary_clean_AVERAGE/figures/figure_1_vertical_rGM_heatmap.tiff
+outputs/batch/summary_clean_AVERAGE/figures/figure_2_vertical_pvalue_heatmap.png
+outputs/batch/summary_clean_AVERAGE/figures/figure_2_vertical_pvalue_heatmap.tiff
+outputs/batch/summary_clean_AVERAGE/figures/figure_3_top_rGM_forest.png
+outputs/batch/summary_clean_AVERAGE/figures/figure_3_top_rGM_forest.tiff
+outputs/batch/summary_clean_AVERAGE/figures/figure_4_reference_panel_sensitivity.png
+outputs/batch/summary_clean_AVERAGE/figures/figure_4_reference_panel_sensitivity.tiff
+outputs/batch/summary_clean_AVERAGE/top_associations_bonferroni.tsv
+outputs/batch/summary_clean_AVERAGE/out_of_range_rGM.tsv
+outputs/batch/summary_clean_AVERAGE/reference_panel_rGM_comparison.tsv
+outputs/batch/summary_clean_AVERAGE/figure_generation_report.txt
 ```
 
-The plotting summary for the current collected outputs is:
+The earlier exploratory full-grid plotting summary was:
 
 ```text
 AD maps: 8

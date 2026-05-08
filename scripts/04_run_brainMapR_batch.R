@@ -7,15 +7,15 @@
 #   brainMapR + GFA route.
 #
 # Inputs:
-#   manifests/brainmapr_small_batch_design.tsv or
-#   manifests/brainmapr_pairwise_design.tsv
+#   manifests/brainmapr_pairwise_design.tsv or
+#   manifests/brainmapr_clean_average_design.tsv
 #
 # Outputs:
 #   outputs/batch/brainMapR_pairs/<pair_id>/
 #
 # How to run:
 #   Rscript scripts/04_run_brainMapR_batch.R \
-#     --design manifests/brainmapr_small_batch_design.tsv \
+#     --design manifests/brainmapr_clean_average_design.tsv \
 #     --pair-id ADvsHC__hyperTension
 #   Rscript scripts/04_run_brainMapR_batch.R \
 #     --design manifests/brainmapr_pairwise_design.tsv \
@@ -26,7 +26,7 @@ options(stringsAsFactors = FALSE)
 parse_args <- function(args) {
   opts <- list(
     project_root = ".",
-    design = "manifests/brainmapr_small_batch_design.tsv",
+    design = "manifests/brainmapr_pairwise_design.tsv",
     pair_id = "",
     row_index = NA_integer_,
     max_pairs = NA_integer_,
@@ -80,6 +80,9 @@ check_package_functions <- function() {
   if (!"sumR2_regression_bivariate" %in% ls("package:brainMapR")) {
     stop("brainMapR::sumR2_regression_bivariate() is not available")
   }
+  if (!"varConstrained" %in% names(formals(brainMapR::sumR2_regression_bivariate))) {
+    stop("Installed brainMapR::sumR2_regression_bivariate() does not support varConstrained")
+  }
   if (!"ldsc_rg" %in% ls("package:GFA")) {
     stop("GFA::ldsc_rg() is not available")
   }
@@ -126,11 +129,11 @@ run_pair <- function(root, row, dry_run = FALSE) {
   metadata <- data.frame(
     key = c(
       "pair_id", "ad_id", "trait_id", "ad_file", "trait_file",
-      "ad_sample_size", "trait_sample_size", "reference_panel"
+      "ad_sample_size", "trait_sample_size", "reference_panel", "varConstrained"
     ),
     value = c(
       row$pair_id, row$ad_id, row$trait_id, row$ad_file, row$trait_file,
-      row$ad_sample_size, row$trait_sample_size, row$reference_panel
+      row$ad_sample_size, row$trait_sample_size, row$reference_panel, "TRUE"
     ),
     stringsAsFactors = FALSE
   )
@@ -155,6 +158,7 @@ run_pair <- function(root, row, dry_run = FALSE) {
     bwasFile = c(row$ad_bwas_file, row$trait_bwas_file),
     bwasSampleSize = c(as.character(row$ad_sample_size), row$trait_sample_size),
     refPanel = c(row$reference_panel),
+    varConstrained = TRUE,
     outputPath = row$output_dir
   )
 

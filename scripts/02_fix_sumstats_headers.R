@@ -14,7 +14,7 @@
 #
 # How to run:
 #   Rscript scripts/02_fix_sumstats_headers.R
-#   Rscript scripts/02_fix_sumstats_headers.R --design manifests/brainmapr_small_batch_design.tsv
+#   Rscript scripts/02_fix_sumstats_headers.R --design manifests/brainmapr_clean_average_design.tsv
 
 options(stringsAsFactors = FALSE)
 

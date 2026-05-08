@@ -5,11 +5,11 @@
 #PBS -j oe
 #PBS -o logs/brainMapR_array.pbs.log
 
-# Submit from the project root after creating full derived inputs:
-#   qsub -J 1-544 scripts/run_brainMapR_batch_array.pbs
+# Submit from the project root after creating derived inputs:
+#   qsub -J 1-<n_jobs> scripts/run_brainMapR_batch_array.pbs
 #
 # Optional:
-#   qsub -J 1-544 -v DESIGN=manifests/brainmapr_pairwise_design.tsv scripts/run_brainMapR_batch_array.pbs
+#   qsub -J 1-<n_jobs> -v DESIGN=manifests/brainmapr_clean_average_design.tsv scripts/run_brainMapR_batch_array.pbs
 #
 # Some PBS installations use PBS_ARRAYID instead of PBS_ARRAY_INDEX. This
 # script accepts either variable.

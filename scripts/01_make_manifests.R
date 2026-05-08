@@ -14,7 +14,8 @@
 #   manifests/ad_bwas_manifest.tsv
 #   manifests/risk_factor_bwas_manifest.tsv
 #   manifests/brainmapr_pairwise_design.tsv
-#   manifests/brainmapr_small_batch_design.tsv
+#   manifests/brainmapr_clean_average_design.tsv
+#   manifests/brainmapr_clean_ukb_design.tsv
 #
 # How to run:
 #   Rscript scripts/01_make_manifests.R
@@ -105,6 +106,24 @@ infer_ad_id <- function(file_name) {
   gsub("^_|_$", "", id)
 }
 
+ad_label <- function(ad_id) {
+  labels <- c(
+    ADvsHC = "AD dementia vs HC",
+    MCIvsHC = "MCI vs HC",
+    Conversion1year = "Conversion <=1y",
+    Conversion2years = "Conversion <=2y",
+    Conversion3years = "Conversion <=3y",
+    Conversion4years = "Conversion <=4y",
+    Conversion5years = "Conversion <=5y",
+    MMSE = "MMSE"
+  )
+  if (ad_id %in% names(labels)) {
+    unname(labels[[ad_id]])
+  } else {
+    ad_id
+  }
+}
+
 confirmed_ad_sample_sizes <- function() {
   c(
     ADvsHC = 3542,
@@ -122,6 +141,59 @@ infer_trait_id <- function(file_name) {
   id <- sub("^sstat_FS_All_moda_total_", "", file_name)
   id <- sub("\\.linear$", "", id)
   gsub("[^A-Za-z0-9]+", "_", id)
+}
+
+trait_label <- function(trait_id) {
+  labels <- c(
+    Alcohol_merge_phenotype = "Alcohol use",
+    Alcohol_week_avg = "Alcohol intake",
+    alcohol_intake_frequency = "Alcohol frequency",
+    anxDis = "Anxiety disorder",
+    BD = "Bipolar disorder",
+    bmi = "BMI",
+    daytime_napping = "Daytime napping",
+    frailty_fi49 = "Frailty index",
+    frailty_missing_count = "Frailty missing count",
+    hyperCholesterolemia = "Hypercholesterolaemia",
+    hyperTension = "Hypertension",
+    imd_england = "Deprivation index",
+    income_before_tax = "Household income",
+    infect_any_ever = "Any infection",
+    infect_count_5y = "Infection count, 5y",
+    infect_count_total = "Infection count, lifetime",
+    infect_recency_days = "Infection recency",
+    insomnia = "Insomnia",
+    ldl_direct = "LDL cholesterol",
+    leisure_social_score = "Leisure/social score",
+    loneliness_isolation = "Loneliness/isolation",
+    lrti_ever = "Lower respiratory infection",
+    majorDepression = "Major depression",
+    multimorbidity = "Multimorbidity",
+    pa_light_time = "Light physical activity",
+    pa_moderate_days_10min = "Moderate PA days",
+    pa_moderate_duration = "Moderate PA duration",
+    pa_moderate_time = "Moderate PA time",
+    pa_vigorous_days_10min = "Vigorous PA days",
+    pa_vigorous_time = "Vigorous PA time",
+    pa_walk_days_10min = "Walking days",
+    pack_years = "Smoking pack-years",
+    pack_years_adult_prop = "Adult pack-years",
+    phobAnx = "Phobic anxiety",
+    pneumonia_ever = "Pneumonia",
+    PTSD = "PTSD",
+    SCZ = "Schizophrenia",
+    sepsis_ever = "Sepsis",
+    sleep_duration = "Sleep duration",
+    smoking_ever = "Ever smoked",
+    ssti_ever = "Skin/soft-tissue infection",
+    T2D = "Type 2 diabetes",
+    uti_ever = "Urinary tract infection"
+  )
+  if (trait_id %in% names(labels)) {
+    unname(labels[[trait_id]])
+  } else {
+    gsub("_", " ", trait_id)
+  }
 }
 
 infer_category <- function(trait_id) {
@@ -153,6 +225,60 @@ infer_category <- function(trait_id) {
   "other_candidate"
 }
 
+clean_trait_decision <- function(trait_id, default_include) {
+  if (!default_include) {
+    return(c(include = FALSE, reason = "not included in default manifest"))
+  }
+
+  specific_alcohol <- c(
+    "beer_cider_weekly_intake",
+    "fortified_wine_weekly_intake",
+    "other_alcohol_weekly_intake",
+    "red_wine_weekly_intake",
+    "spirits_weekly_intake",
+    "white_wine_weekly_intake",
+    "ever_drinker"
+  )
+  diabetes_redundant <- c(
+    "diabetes_doctor_dx",
+    "diabetes_preimg",
+    "t2d_e11_preimg"
+  )
+  broad_psychiatric <- c(
+    "anxiety_broad_preimg",
+    "bd_broad_preimg",
+    "mdd_broad_preimg",
+    "psy_any_broad_preimg",
+    "psy_any_strict_preimg",
+    "psy_clean_ctrl_mask",
+    "ptsd_broad_preimg",
+    "scz_broad_preimg"
+  )
+  current_unusable <- c(
+    "Menopause",
+    "hrt_ever_used",
+    "htn_i10_preimg",
+    "med_20003_n_distinct_i2",
+    "periodontal_k05_preimg",
+    "stroke"
+  )
+
+  if (trait_id %in% specific_alcohol) {
+    return(c(include = FALSE, reason = "specific alcohol beverage variable removed from clean set"))
+  }
+  if (trait_id %in% diabetes_redundant) {
+    return(c(include = FALSE, reason = "redundant diabetes variable; T2D retained"))
+  }
+  if (trait_id %in% broad_psychiatric) {
+    return(c(include = FALSE, reason = "broad/pre-imaging psychiatric definition removed from clean set"))
+  }
+  if (trait_id %in% current_unusable) {
+    return(c(include = FALSE, reason = "unusable or pending upstream BWAS confirmation"))
+  }
+
+  c(include = TRUE, reason = "retained in clean figure set")
+}
+
 probe_file_name <- function(file_name) {
   sub("\\.linear$", ".Probe.linear", file_name)
 }
@@ -180,6 +306,7 @@ ad_manifest <- do.call(rbind, lapply(ad_files, function(path) {
   data.frame(
     ad_id = ad_id,
     phenotype = ad_id,
+    phenotype_label = ad_label(ad_id),
     ad_file = relative_path(path, root),
     file_name = file_name,
     sample_size = if (has_sample_size) sample_size else NA_real_,
@@ -213,9 +340,11 @@ risk_manifest <- do.call(rbind, lapply(risk_files, function(path) {
     has_data &&
     "NMISS" %in% columns &&
     (has_probe || has_voxel)
+  clean_decision <- clean_trait_decision(trait_id, include)
   data.frame(
     trait_id = trait_id,
     trait = trait_id,
+    trait_label = trait_label(trait_id),
     category = category,
     raw_file = relative_path(path, root),
     file_name = file_name,
@@ -225,6 +354,8 @@ risk_manifest <- do.call(rbind, lapply(risk_files, function(path) {
     has_Voxel = has_voxel,
     needs_Voxel_to_Probe = !has_probe && has_voxel,
     include = include,
+    include_clean = as.logical(clean_decision[["include"]]),
+    clean_notes = unname(clean_decision[["reason"]]),
     notes = if (!has_data) {
       "no data rows"
     } else if (include) {
@@ -238,8 +369,10 @@ risk_manifest <- do.call(rbind, lapply(risk_files, function(path) {
 
 included_ad <- ad_manifest[ad_manifest$include, , drop = FALSE]
 included_risk <- risk_manifest[risk_manifest$include, , drop = FALSE]
+included_clean_risk <- risk_manifest[risk_manifest$include_clean, , drop = FALSE]
 
-make_design <- function(ad_df, risk_df) {
+make_design <- function(ad_df, risk_df, reference_panel = opts$reference_panel,
+                        pair_output_root = opts$pair_output_root) {
   if (nrow(ad_df) == 0 || nrow(risk_df) == 0) {
     return(data.frame())
   }
@@ -254,18 +387,20 @@ make_design <- function(ad_df, risk_df) {
       rows[[idx]] <- data.frame(
         pair_id = pair_id,
         ad_id = ad$ad_id,
+        ad_label = ad$phenotype_label,
         ad_file = ad$ad_file,
         ad_input_path = dirname(ad$ad_file),
         ad_bwas_file = basename(ad$ad_file),
         ad_sample_size = ad$sample_size,
         trait_id = risk$trait_id,
+        trait_label = risk$trait_label,
         trait_file = risk$analysis_file,
         trait_category = risk$category,
         trait_input_path = dirname(risk$analysis_file),
         trait_bwas_file = basename(risk$analysis_file),
         trait_sample_size = risk$sample_size_source,
-        reference_panel = opts$reference_panel,
-        output_dir = file.path(opts$pair_output_root, pair_id),
+        reference_panel = reference_panel,
+        output_dir = file.path(pair_output_root, pair_id),
         include = TRUE,
         stringsAsFactors = FALSE
       )
@@ -276,19 +411,17 @@ make_design <- function(ad_df, risk_df) {
 }
 
 full_design <- make_design(included_ad, included_risk)
-
-small_ad_ids <- c("ADvsHC", "MCIvsHC")
-small_trait_ids <- c(
-  "hyperTension",
-  "T2D",
-  "hyperCholesterolemia",
-  "ldl_direct",
-  "majorDepression",
-  "smoking_ever"
+clean_average_design <- make_design(
+  included_ad,
+  included_clean_risk,
+  reference_panel = "AVERAGE",
+  pair_output_root = "outputs/batch/brainMapR_pairs_clean_AVERAGE"
 )
-small_design <- make_design(
-  included_ad[included_ad$ad_id %in% small_ad_ids, , drop = FALSE],
-  included_risk[included_risk$trait_id %in% small_trait_ids, , drop = FALSE]
+clean_ukb_design <- make_design(
+  included_ad,
+  included_clean_risk,
+  reference_panel = "UKB",
+  pair_output_root = "outputs/batch/brainMapR_pairs_clean_UKB"
 )
 
 write.table(ad_manifest, file.path(manifest_dir, "ad_bwas_manifest.tsv"),
@@ -297,12 +430,16 @@ write.table(risk_manifest, file.path(manifest_dir, "risk_factor_bwas_manifest.ts
             sep = "\t", row.names = FALSE, quote = FALSE)
 write.table(full_design, file.path(manifest_dir, "brainmapr_pairwise_design.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
-write.table(small_design, file.path(manifest_dir, "brainmapr_small_batch_design.tsv"),
+write.table(clean_average_design, file.path(manifest_dir, "brainmapr_clean_average_design.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(clean_ukb_design, file.path(manifest_dir, "brainmapr_clean_ukb_design.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
 
 cat("Manifest generation complete.\n")
 cat("Included AD maps:", nrow(included_ad), "\n")
 cat("Included risk-factor maps:", nrow(included_risk), "\n")
+cat("Clean risk-factor maps:", nrow(included_clean_risk), "\n")
 cat("Full pairwise jobs:", nrow(full_design), "\n")
-cat("Small-batch jobs:", nrow(small_design), "\n")
+cat("Clean AVERAGE jobs:", nrow(clean_average_design), "\n")
+cat("Clean UKB jobs:", nrow(clean_ukb_design), "\n")
 cat("Output directory:", relative_path(manifest_dir, root), "\n")

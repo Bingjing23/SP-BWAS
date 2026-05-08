@@ -9,7 +9,7 @@
 #   qsub scripts/run_brainMapR_batch.pbs
 #
 # Optional variables:
-#   qsub -v DESIGN=manifests/brainmapr_small_batch_design.tsv scripts/run_brainMapR_batch.pbs
+#   qsub -v DESIGN=manifests/brainmapr_clean_average_design.tsv scripts/run_brainMapR_batch.pbs
 #   qsub -v PAIR_ID=ADvsHC__hyperTension scripts/run_brainMapR_batch.pbs
 #   qsub -v CONTINUE_ON_ERROR=1 scripts/run_brainMapR_batch.pbs
 
@@ -26,7 +26,7 @@ export LD_LIBRARY_PATH=/software/conda-envs/pkgs/bzip2-1.0.8-h4bc722e_7/lib:${LD
 
 mkdir -p logs outputs/batch
 
-DESIGN="${DESIGN:-manifests/brainmapr_small_batch_design.tsv}"
+DESIGN="${DESIGN:-manifests/brainmapr_clean_average_design.tsv}"
 PAIR_ID="${PAIR_ID:-}"
 CONTINUE_ON_ERROR="${CONTINUE_ON_ERROR:-0}"
 

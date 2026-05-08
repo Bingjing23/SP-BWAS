@@ -7,8 +7,7 @@
 #   possible into a long table and metric matrices.
 #
 # Inputs:
-#   manifests/brainmapr_pairwise_design.tsv or
-#   manifests/brainmapr_small_batch_design.tsv
+#   manifests/brainmapr_pairwise_design.tsv or a clean/sensitivity design
 #
 # Outputs:
 #   outputs/batch/summary/brainmapr_output_files.tsv
@@ -17,7 +16,8 @@
 #
 # How to run:
 #   Rscript scripts/05_collect_brainMapR_outputs.R \
-#     --design manifests/brainmapr_small_batch_design.tsv
+#     --design manifests/brainmapr_clean_average_design.tsv \
+#     --output-dir outputs/batch/summary_clean_AVERAGE
 
 options(stringsAsFactors = FALSE)
 
