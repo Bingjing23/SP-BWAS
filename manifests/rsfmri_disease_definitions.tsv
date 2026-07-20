@@ -1,0 +1,11 @@
+disease_group	disease_id	disease_label	candidate_columns	positive_values	notes
+neurodivergent	ASD	Autism spectrum disorder	ASD;autism;autism_spectrum_disorder;asd_broad_preimg	1	Use a confirmed phenotype column if available.
+neurodivergent	ADHD	Attention-deficit/hyperactivity disorder	ADHD;adhd;attention_deficit_hyperactivity_disorder;adhd_broad_preimg	1	Use a confirmed phenotype column if available.
+neurodegenerative	AD	Alzheimer disease	AD;Alzheimer;Alzheimer_disease;alzheimers;dementia_alzheimer;ad_broad_preimg	1	ND correction from user: neurodegenerative group includes AD, not ADHD.
+neurodegenerative	PD	Parkinson disease	PD;Parkinson;Parkinson_disease;parkinson;parkinson_broad_preimg	1	Use a confirmed phenotype column if available.
+mental_disorder	MDD	Major depressive disorder	majorDepression;MDD;mdd;mdd_broad_preimg	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for majorDepression.
+mental_disorder	BD	Bipolar disorder	BD;bd;bd_broad_preimg	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for BD.
+mental_disorder	SCZ	Schizophrenia	SCZ;scz;scz_broad_preimg	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for SCZ.
+mental_disorder	PTSD	Post-traumatic stress disorder	PTSD;ptsd;ptsd_broad_preimg	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for PTSD.
+mental_disorder	phobAnx	Phobic anxiety	phobAnx;phobic_anxiety	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for phobAnx.
+mental_disorder	anxDis	Other anxiety disorder	anxDis;anxiety_disorder;anxiety_broad_preimg	1	Definition exists in SSTAT_BingJing/16_BingJing.Rmd for anxDis.

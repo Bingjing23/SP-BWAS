@@ -1,0 +1,3 @@
+cohort_id	cohort_label	usable_list	analysis_role	notes
+gwas_core_57485	GWAS/core covariate cohort	/working/lab_puyag/bingjinZ/UKBB/outputs/gwas_inputs_neurostorm_59053/max_subjects_core_covariates/subject_ids.txt	primary	Default main analysis cohort with core covariates; use for downstream GWAS, phenotypic mapping, disease-vs-embedding models, and regression/association analyses.
+embedding_59057	Full 8-batch embedding cohort	/working/lab_puyag/bingjinZ/UKBB/outputs/neurostorm_embeddings_20227/neurostorm_embeddings_20227_8batch_59057.eids.txt	supplementary	Supplementary coverage cohort: all subjects with formal 8-batch embeddings; some may be excluded from standard models because of missing covariates.

@@ -6,12 +6,35 @@ This repository contains the code and analysis notes for an AD-related brain-wid
 
 - `SSTAT_BingJing/16_BingJing.Rmd`: R Markdown script for building UK Biobank-derived phenotypes and running BWAS/BLUP-style analyses with `OSCA`.
 - `AlzDisease_LMM/`: AD BWAS result files and related outputs.
+- `scripts/00_check_inputs.R` to `scripts/06_plot_brainMapR_summary.R`: downstream brainMapR audit, manifest, batch, collection, and plotting scripts.
+- `scripts/08_summarize_rsfmri_disease_counts.py`: separate Python utility for counting disease-positive subjects in processed rsfMRI/embedding cohorts.
 
 ## Notes
 
 - Data files are not included in version control.
 - The scripts assume the original UK Biobank and REML/LDSC files already exist on the same server paths used in the Rmd.
 - `brainMapR` is used downstream for summary-statistic based analyses.
+- The rsfMRI disease-count task is separate from the brainMapR BWAS workflow and should use Python, matching the upstream NeuroSTORM/embedding subject-list processing.
+
+## Project status summary
+
+This repository has covered two related but distinct pieces of work.
+
+The main SP-BWAS work starts from UKB-derived and AD-related BWAS summary
+statistics. It audits inputs, creates manifests, converts UKB `Voxel` headers
+to derived `Probe` copies, runs `brainMapR::sumR2_regression_bivariate()` for
+AD x risk-factor map pairs, collects pairwise outputs, and generates summary
+figures. The documented clean analysis uses 8 AD maps with confirmed sample
+sizes and a curated UKB risk-factor set.
+
+The newer rsfMRI disease profile work is a subject-level counting task for a
+separate project. It compares disease counts in the primary GWAS/core covariate
+cohort and the supplementary full embedding cohort. See:
+
+```text
+RSFMRI_DISEASE_PROFILE_README.md
+RSFMRI_DISEASE_PROFILE_AGENT_README.md
+```
 
 ## Quick start
 

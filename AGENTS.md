@@ -17,6 +17,8 @@ Do not reorganise this repository unless explicitly instructed. The current fold
 
 This project is **not** an fMRI preprocessing project, **not** a deep learning embedding project, **not** a PRS project, and **not** a SNP-level GWAS project. Do not introduce or modify workflows related to fMRI alignment, foundation models, embeddings, disease prediction, PRS, or neural-network architectures unless explicitly requested.
 
+Exception: the repository now contains a small, separate rsfMRI disease-profile handoff module for another project. That module is limited to subject-level disease counts in already processed rsfMRI/embedding cohorts. It does not preprocess fMRI data or train embeddings. Use `RSFMRI_DISEASE_PROFILE_README.md` for the human-facing handoff and `RSFMRI_DISEASE_PROFILE_AGENT_README.md` for agent-facing instructions.
+
 The immediate goal is to determine whether the current files are sufficient to run downstream map-level integration using:
 
 ```r
