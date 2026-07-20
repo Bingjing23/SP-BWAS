@@ -376,6 +376,28 @@ make_sensitivity_plot <- function(avg_records, ukb_summary_dir, design_path, out
     suffixes = c("_AVERAGE", "_UKB")
   )
   merged <- merged[is.finite(merged$rGM_AVERAGE) & is.finite(merged$rGM_UKB), ]
+  merged$rGM_delta <- merged$rGM_UKB - merged$rGM_AVERAGE
+  merged$abs_rGM_delta <- abs(merged$rGM_delta)
+  merged$direction_switch <- sign(merged$rGM_AVERAGE) != sign(merged$rGM_UKB) &
+    merged$rGM_AVERAGE != 0 & merged$rGM_UKB != 0
+  merged$both_in_range <- abs(merged$rGM_AVERAGE) <= 1 & abs(merged$rGM_UKB) <= 1
+
+  shift_outliers <- merged[merged$both_in_range, ]
+  shift_outliers <- shift_outliers[order(-shift_outliers$abs_rGM_delta), ]
+  shift_outliers <- head(shift_outliers, 20)
+  shift_outliers$avg_to_ukb <- sprintf("%.2f -> %.2f", shift_outliers$rGM_AVERAGE, shift_outliers$rGM_UKB)
+  write_table(
+    shift_outliers[, c(
+      "ad_id", "ad_label", "trait_id", "trait_label", "trait_category",
+      "rGM_AVERAGE", "rGM_UKB", "rGM_delta", "abs_rGM_delta",
+      "direction_switch", "avg_to_ukb"
+    )],
+    file.path(dirname(out_dir), "reference_panel_shift_outliers.tsv")
+  )
+
+  annotated <- head(shift_outliers, 10)
+  annotated$point_label <- sprintf("%.2f -> %.2f", annotated$rGM_AVERAGE, annotated$rGM_UKB)
+
   r <- if (nrow(merged) >= 3) cor(merged$rGM_AVERAGE, merged$rGM_UKB) else NA_real_
   label <- paste0("Pearson r = ", ifelse(is.finite(r), sprintf("%.3f", r), "NA"), "\nN = ", nrow(merged))
 
@@ -384,11 +406,30 @@ make_sensitivity_plot <- function(avg_records, ukb_summary_dir, design_path, out
     ggplot2::geom_vline(xintercept = 0, linewidth = 0.25, color = "grey60") +
     ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey40") +
     ggplot2::geom_point(alpha = 0.75, size = 1.8) +
+    ggplot2::geom_point(
+      data = annotated,
+      ggplot2::aes(x = rGM_AVERAGE, y = rGM_UKB),
+      inherit.aes = FALSE,
+      shape = 21,
+      size = 2.7,
+      stroke = 0.7,
+      color = "black",
+      fill = "white"
+    ) +
+    ggplot2::geom_text(
+      data = annotated,
+      ggplot2::aes(x = rGM_AVERAGE, y = rGM_UKB, label = point_label),
+      inherit.aes = FALSE,
+      size = 2.5,
+      color = "black",
+      nudge_y = 0.045,
+      check_overlap = TRUE
+    ) +
     ggplot2::coord_equal(xlim = c(-1, 1), ylim = c(-1, 1)) +
     ggplot2::annotate("text", x = -0.95, y = 0.95, hjust = 0, vjust = 1, label = label, size = 3.5) +
     ggplot2::labs(
       title = "Reference-panel sensitivity of rGM estimates",
-      subtitle = "Each point is one AD x UKB risk-factor pair; dashed line is y = x.",
+      subtitle = "Effect sizes only. Labelled points have the largest AVERAGE-to-UKB rGM shifts; dashed line is y = x.",
       x = "rGM using AVERAGE reference panel",
       y = "rGM using UKB reference panel",
       color = "Category"
