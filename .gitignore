@@ -7,6 +7,10 @@
 outputs/
 logs/
 external_src/
+
+# Local writing drafts and manuscript-development notes.
+manuscript/
+
 *.linear
 *.linear_random_oscaFormat
 *.log
