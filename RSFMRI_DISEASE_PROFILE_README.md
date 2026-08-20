@@ -145,3 +145,44 @@ subjects who have embeddings but are not in the GWAS/core covariate cohort.
 The cohort lists live on the HPC path and are not visible from the current
 desktop workspace. The actual run also needs a phenotype table path with the
 confirmed disease definitions.
+
+## Conversation Sync: 2026-08-17
+
+The current window established these handoff decisions:
+
+- Use Python for the rsfMRI disease-profile task. R should remain limited to
+  the main SP-BWAS brainMapR workflow.
+- The user previously downloaded and processed all available UKB field-20227
+  instances, then selected the first available processed instance per subject.
+- That first selected instance is an image-processing index scan, not by itself
+  a disease-valid case/control definition.
+- For disease analyses, disease status should ideally be anchored to the
+  selected scan date. If diagnosis dates are available, separate pre-scan cases
+  from post-scan incident diagnoses.
+- Use the 57,485 GWAS/core covariate cohort as the default main-analysis
+  cohort.
+- Also report the 59,057 full embedding cohort as supplementary coverage.
+- Compare disease-positive subjects present in the embedding cohort but absent
+  from the GWAS/core covariate cohort.
+- Do not use raw case IDs such as `1013356_20227_2_0` for disease merges. Use
+  bare participant EID.
+- The disease grouping correction is: neurodegenerative = `AD` and `PD`, not
+  `PD` and `ADHD`.
+
+The current implementation is:
+
+```text
+manifests/rsfmri_cohorts.tsv
+manifests/rsfmri_disease_definitions.tsv
+scripts/08_summarize_rsfmri_disease_counts.py
+```
+
+The current missing input is still:
+
+```text
+/path/to/phenotype_table.tsv
+```
+
+That phenotype table should contain `eid` and disease columns such as `ASD`,
+`ADHD`, `AD`, `PD`, `majorDepression`, `BD`, `SCZ`, `PTSD`, `phobAnx`, and
+`anxDis`, or scan-date-aware equivalents such as `AD_pre_scan`.

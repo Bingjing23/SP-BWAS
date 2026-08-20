@@ -36,6 +36,67 @@ RSFMRI_DISEASE_PROFILE_README.md
 RSFMRI_DISEASE_PROFILE_AGENT_README.md
 ```
 
+The Lancet 2024 dementia risk-factor comparison handoff is documented in:
+
+```text
+LANCET_2024_BRAINMAPR_HANDOFF.md
+```
+
+It summarizes the supervisor-ready tables, clean figures, PAF interpretation,
+and the current mismatch between Lancet-prioritized risk factors and SP-BWAS
+brainMapR map-level results.
+
+## 2026-08-17 handoff sync
+
+This section records the current conversation state so future work can resume
+without re-deriving context.
+
+For the current SP-BWAS scientific/analysis handoff, including final server
+result paths, clean AVERAGE/UKB outputs, out-of-range rGM QC pair directories,
+and row-count table generation, use:
+
+```text
+PROGRESS_REPORT.md
+```
+
+1. The original UKB `.tab` table is the upstream phenotype/BWAS starting point,
+   but this repository's main executable downstream analysis starts from
+   existing BWAS summary statistics in `AlzDisease_LMM/` and
+   `SSTAT_BingJing/`.
+2. The main SP-BWAS workflow is R/brainMapR-based because
+   `brainMapR::sumR2_regression_bivariate()` is an R function.
+3. The new rsfMRI disease-profile task should use Python, not R, because the
+   upstream rsfMRI/embedding subject filtering and subject-list handling were
+   done in Python-style workflows.
+4. The default rsfMRI disease-profile cohorts are documented in
+   `manifests/rsfmri_cohorts.tsv`: `gwas_core_57485` is the primary analysis
+   cohort, and `embedding_59057` is the supplementary coverage cohort.
+5. Do not merge diseases by raw UKB imaging case IDs such as
+   `1013356_20227_2_0`; disease/phenotype tables should merge by participant
+   `eid`. The Python script strips leading bare EIDs from case-like IDs when
+   reading usable lists.
+6. Current disease groups for the rsfMRI profile are in
+   `manifests/rsfmri_disease_definitions.tsv`: neurodivergent = ASD/ADHD,
+   neurodegenerative = AD/PD, and mental_disorder = MDD/BD/SCZ/PTSD/phobAnx/anxDis.
+   The neurodegenerative group was corrected to include `AD`, not `ADHD`.
+7. For disease timing, the first usable processed 20227 instance can be treated
+   as an index scan only if disease status is anchored to that scan date.
+   Preferred scan-date-aware statuses are `pre_scan_case`,
+   `post_scan_incident`, `control`, and `missing/uncertain`.
+8. The rsfMRI disease-profile script currently counts already prepared 0/1
+   phenotype columns. It does not derive first-diagnosis-date logic unless the
+   phenotype table already contains scan-date-aware columns.
+9. The remaining blocker for real rsfMRI disease counts is a phenotype table
+   path with confirmed disease columns or scan-date-aware disease columns.
+
+The Python rsfMRI disease-profile command is:
+
+```bash
+python3 scripts/08_summarize_rsfmri_disease_counts.py \
+  --cohort-manifest manifests/rsfmri_cohorts.tsv \
+  --phenotype-table /path/to/phenotype_table.tsv
+```
+
 ## Quick start
 
 1. Open [`SSTAT_BingJing/16_BingJing.Rmd`](SSTAT_BingJing/16_BingJing.Rmd).

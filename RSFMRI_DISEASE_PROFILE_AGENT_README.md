@@ -137,3 +137,34 @@ The rest of the repository has already done or documented:
 8. Collection of pairwise brainMapR outputs into long tables and matrices.
 9. Figure generation and supervisor-facing summaries.
 10. New rsfMRI disease-profile framework described in this document.
+
+## Current Window Sync: 2026-08-17
+
+If a future agent resumes from this file, preserve the following conclusions:
+
+1. The user asked why R appeared in the rsfMRI disease-count task. The correct
+   resolution is that R belongs to the brainMapR workflow, while the rsfMRI
+   disease-count task should use Python.
+2. The R implementation for `scripts/08_summarize_rsfmri_disease_counts.*` was
+   replaced with `scripts/08_summarize_rsfmri_disease_counts.py`.
+3. The Python script was tested with a minimal synthetic cohort and phenotype
+   table under `/private/tmp`; it produced disease counts and correctly
+   normalized case-like IDs such as `1001_20227_2_0` to bare EID `1001`.
+4. The user's two cohort paths are HPC paths and are not readable from the
+   current desktop workspace. Do not conclude they are invalid; run on the HPC
+   or another mounted environment.
+5. The task is not complete until a phenotype table path is supplied. The
+   phenotype table must contain disease columns, or precomputed scan-date-aware
+   disease columns if disease timing is required.
+6. If the user later supplies a raw UKB `.tab` table instead of a phenotype
+   table, build an explicit phenotype table first and document every disease
+   definition. Do not infer disease definitions from file names alone.
+7. When reporting results, provide both per-disease counts and group-level
+   any-case counts for the primary `gwas_core_57485` cohort and supplementary
+   `embedding_59057` cohort.
+8. Also report `disease_positive_embedding_not_gwas_core.tsv` so the user can
+   see which disease-positive subjects have embeddings but are not in the
+   GWAS/core covariate cohort.
+
+When modifying documentation, keep this module's scope separate from the
+brainMapR BWAS workflow. Do not move existing directories or raw data.
