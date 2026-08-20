@@ -46,6 +46,124 @@ It summarizes the supervisor-ready tables, clean figures, PAF interpretation,
 and the current mismatch between Lancet-prioritized risk factors and SP-BWAS
 brainMapR map-level results.
 
+Current project-wide handoff and tracker files:
+
+```text
+PROJECT_HISTORY.md
+PROJECT_HANDOFF.md
+PROJECT_TRACKER.md
+```
+
+Use `PROJECT_HISTORY.md` for the chronological project record from inception to
+the current v2 state, including upstream phenotype-code evidence. Use
+`PROJECT_HANDOFF.md` for the current Elise v2 summary-statistics handoff,
+phenotype-coding conclusions, and next analysis steps. Use `PROJECT_TRACKER.md`
+as the living task and trait-status tracker.
+
+## 2026-08-20 Elise v2 summary-statistics update
+
+Elise provided an updated summary-statistics folder, now stored locally at:
+
+```text
+SSTAT_BingJing_v2/
+```
+
+The folder is ignored by git and should not be uploaded to GitHub. It contains
+the same 71 `sstat_FS_All_moda_total_*.linear` trait names as the previous
+`SSTAT_BingJing/` folder. This means v2 is not an added-traits folder; it is a
+refreshed full folder where most files are identical and selected problematic
+files were replaced.
+
+File-level comparison:
+
+```text
+old SSTAT_BingJing:    71 trait files
+new SSTAT_BingJing_v2: 71 trait files
+common trait names:    71
+v2-only traits:        0
+old-only traits:       0
+byte-identical files:  62
+changed/fixed files:   9
+```
+
+Changed or fixed v2 files:
+
+| Trait | Old state | v2 state | Current interpretation |
+| --- | --- | --- | --- |
+| `Menopause` | Header only | Complete 654003-row map | Fixed file, sex-specific trait |
+| `hrt_ever_used` | Header only | Complete 654003-row map | Fixed file, sex-specific trait |
+| `pneumonia_ever` | 19730 rows | Complete 654003-row map | Fixed major row-count problem |
+| `sepsis_ever` | 128581 rows | Complete 654003-row map | Fixed major row-count problem |
+| `diabetes_doctor_dx` | 255667 rows | Complete 654003-row map | Fixed row-count problem, still redundant with selected `T2D` |
+| `other_alcohol_weekly_intake` | 613514 rows | Complete 654003-row map | Fixed row-count problem, still beverage-specific |
+| `stroke` | Complete rows but `b=0`, `se=0`, `p=NA` | Complete map with real statistics | Fixed old unusable output |
+| `pa_vigorous_time` | Complete rows but unstable effect scale | Complete map with normal scale | Fixed key out-of-range driver candidate |
+| `Alcohol_merge_phenotype` | Extra row-name/format issue | Clean `Probe` format | Fixed format/input issue |
+
+The 62 unchanged files can be treated as already file-level usable, but their
+biological interpretation still depends on phenotype coding, sample selection,
+and covariate decisions.
+
+The upstream phenotype project is:
+
+```text
+/Users/junzhou/Desktop/Side Project/ukb-AD-traits
+```
+
+Relevant confirmed coding:
+
+- `smoking_ever` is not conventional ever-smoked. It is coded as current smoker
+  versus never smoker: `20116 == 2 -> 1`, `20116 == 1 -> NA`, and
+  `20116 == 0` with `20160 == 0 -> 0`.
+- `insomnia` uses UKB field `1200`, preferring instance 2 and falling back to
+  instance 0. Negative UKB missing codes are set to `NA`. The original direction
+  is retained, so higher values mean more frequent insomnia.
+- `sleep_duration` uses UKB field `1160`, instance 2, as a scalar raw-hours
+  phenotype unless upstream code is changed.
+
+The `ukb-AD-traits/outputs/qc_v2/qc_summary.tsv` file contains 72 upstream
+phenotypes, but 15 of those do not appear in either `SSTAT_BingJing/` or
+`SSTAT_BingJing_v2/`:
+
+```text
+age_at_menopause
+air_no2_2010
+air_nox_2010
+air_pm10_2010
+air_pm25_10_2010
+air_pm25_2010
+anxiety_strict_preimg
+bd_strict_preimg
+hearing_aid_user
+hearing_loss_current
+mdd_strict_preimg
+ptsd_strict_preimg
+scz_strict_preimg
+stroke_i64_preimg
+vision_problems_current
+```
+
+These should not be treated as negative results or previously passed traits.
+They are missing upstream summary statistics unless Elise confirms that they
+were intentionally omitted.
+
+Immediate next action:
+
+1. Decide how to make v2 the active input source. The current scripts read
+   `SSTAT_BingJing/` by default, so either back up and replace old files with
+   v2 copies, or update the manifest scripts to accept a risk-factor source
+   directory.
+2. Regenerate input audit and manifests against v2.
+3. Recreate derived `Probe` inputs with `--force` so old derived files do not
+   silently persist.
+4. Rerun AVERAGE and UKB brainMapR batches for the clean design.
+5. Recollect and replot results, then check whether previous out-of-range and
+   failed traits are resolved.
+6. Ask Elise only the remaining targeted questions: whether v2 was generated
+   from the exact current `ukb-AD-traits` version, and whether the 15
+   `qc_v2`-present but summary-statistics-missing traits were intentionally
+   omitted or need separate generation.
+
 ## 2026-08-17 handoff sync
 
 This section records the current conversation state so future work can resume

@@ -27,6 +27,37 @@ The reported brainMapR results use the `AVERAGE` reference panel. The main
 metric used for this handoff is `rGM` from
 `brainMapR::sumR2_regression_bivariate()`.
 
+## 2026-08-20 v2 Input Caveat
+
+This Lancet-focused handoff was written from the pre-v2 clean brainMapR
+outputs. Elise later provided an updated `SSTAT_BingJing_v2/` summary-statistics
+folder. That v2 folder contains the same 71 trait names as the original
+`SSTAT_BingJing/` folder, with 62 byte-identical files and 9 changed/fixed
+files:
+
+```text
+Alcohol_merge_phenotype
+Menopause
+diabetes_doctor_dx
+hrt_ever_used
+other_alcohol_weekly_intake
+pa_vigorous_time
+pneumonia_ever
+sepsis_ever
+stroke
+```
+
+Therefore, this Lancet comparison should be treated as pre-v2 until the
+brainMapR AVERAGE and UKB batches are rerun from v2 inputs and the figures are
+regenerated.
+
+Current project-wide v2 handoff and tracker:
+
+```text
+PROJECT_HANDOFF.md
+PROJECT_TRACKER.md
+```
+
 ## PAF Definition Used Here
 
 The PAF values in the figures and tables come from the Lancet 2024 Commission
