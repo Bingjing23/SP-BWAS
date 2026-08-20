@@ -309,10 +309,14 @@ Suggested script names, if needed:
 scripts/00_check_inputs.R
 scripts/01_make_manifests.R
 scripts/02_fix_sumstats_headers.R
-scripts/03_run_brainMapR_pilot.R
 scripts/04_run_brainMapR_batch.R
 scripts/05_collect_brainMapR_outputs.R
+scripts/06_plot_brainMapR_summary.R
 ```
+
+The old `03_*local_ldsc_rg*` files are legacy diagnostic code for an
+unofficial LDSC replacement and are not part of the official brainMapR route.
+Do not use them to replace a failed official run.
 
 Scripts should:
 

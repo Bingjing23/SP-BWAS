@@ -99,6 +99,14 @@ extract_scalar_metrics <- function(path) {
   do.call(rbind, rows)
 }
 
+is_diagnostic_file <- function(path) {
+  basename(path) %in% c(
+    "run_status.tsv",
+    "run_metadata.tsv",
+    "error_annotation.txt"
+  )
+}
+
 write_metric_matrices <- function(results, out_dir) {
   if (nrow(results) == 0) {
     return(invisible(NULL))
@@ -182,7 +190,11 @@ for (i in seq_len(nrow(design))) {
       stringsAsFactors = FALSE
     )
 
-    metrics <- extract_scalar_metrics(path)
+    metrics <- if (is_diagnostic_file(path)) {
+      data.frame()
+    } else {
+      extract_scalar_metrics(path)
+    }
     if (nrow(metrics) > 0) {
       metrics$pair_id <- row$pair_id
       metrics$ad_id <- row$ad_id

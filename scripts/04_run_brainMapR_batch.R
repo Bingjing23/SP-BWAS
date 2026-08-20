@@ -109,6 +109,36 @@ write_status <- function(output_dir, row, status, error = "") {
               sep = "\t", row.names = FALSE, quote = FALSE)
 }
 
+write_error_annotation <- function(output_dir, row, error) {
+  package_version <- function(package_name) {
+    if (!requireNamespace(package_name, quietly = TRUE)) {
+      return("not_loaded_or_unavailable")
+    }
+    as.character(utils::packageVersion(package_name))
+  }
+
+  error_call <- conditionCall(error)
+  error_call_text <- if (is.null(error_call)) "<none>" else paste(deparse(error_call), collapse = "")
+  annotation <- c(
+    "# SP-BWAS pair error annotation",
+    paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")),
+    paste("Pair:", row$pair_id),
+    paste("AD input:", file.path(row$ad_input_path, row$ad_bwas_file)),
+    paste("Trait input:", file.path(row$trait_input_path, row$trait_bwas_file)),
+    paste("AD sample-size specification:", row$ad_sample_size),
+    paste("Trait sample-size specification:", row$trait_sample_size),
+    paste("Reference panel:", row$reference_panel),
+    paste("Error class:", paste(class(error), collapse = ", ")),
+    paste("Error call:", error_call_text),
+    paste("Error message:", conditionMessage(error)),
+    paste("brainMapR version:", package_version("brainMapR")),
+    paste("GFA version:", package_version("GFA")),
+    "",
+    "Use this annotation together with the PBS/R log. Keep the original package call and input row unchanged when diagnosing the error."
+  )
+  writeLines(annotation, file.path(output_dir, "error_annotation.txt"))
+}
+
 validate_pair_inputs <- function(root, row) {
   ad_path <- file.path(root, row$ad_input_path, row$ad_bwas_file)
   trait_path <- file.path(root, row$trait_input_path, row$trait_bwas_file)
@@ -218,6 +248,7 @@ for (i in seq_len(nrow(design))) {
   if (!is.null(err)) {
     output_dir <- file.path(root, row$output_dir)
     write_status(output_dir, row, "failed", conditionMessage(err))
+    write_error_annotation(output_dir, row, err)
     failures[[length(failures) + 1]] <- data.frame(
       pair_id = row$pair_id,
       error = conditionMessage(err),

@@ -16,6 +16,16 @@ This repository contains the code and analysis notes for an AD-related brain-wid
 - `brainMapR` is used downstream for summary-statistic based analyses.
 - The rsfMRI disease-count task is separate from the brainMapR BWAS workflow and should use Python, matching the upstream NeuroSTORM/embedding subject-list processing.
 
+The official brainMapR path is manifest-driven: audit inputs with
+`scripts/00_check_inputs.R`, generate manifests with
+`scripts/01_make_manifests.R`, create derived `Probe` inputs with
+`scripts/02_fix_sumstats_headers.R`, run pairs with
+`scripts/04_run_brainMapR_batch.R` through PBS, collect results with
+`scripts/05_collect_brainMapR_outputs.R`, and plot only after collection with
+`scripts/06_plot_brainMapR_summary.R`. The legacy `03_*local_ldsc_rg*` scripts
+use an unofficial replacement for `GFA::ldsc_rg()` and are retained only for
+historical diagnostics, not for the official analysis.
+
 ## Project status summary
 
 This repository has covered two related but distinct pieces of work.
@@ -568,7 +578,11 @@ find outputs/batch/brainMapR_pairs_clean_UKB -name run_status.tsv \
 
 Any failed pair writes its own status file under
 `outputs/batch/brainMapR_pairs/<pair_id>/run_status.tsv` and a compact failure
-record under `outputs/batch/failures/`.
+record under `outputs/batch/failures/`. It also writes
+`error_annotation.txt` beside the status file with the pair inputs, sample-size
+specifications, package versions, and original error call. Use that annotation
+with the server R/PBS log when debugging; do not replace the workflow with a
+new trial script before identifying the failing existing stage.
 
 Collect full-batch outputs:
 
